@@ -29,7 +29,7 @@ pval_cutoff <- function (x, fdr_threshold) {
 
 #' Filter the data by p-value
 #'
-#' The \code{fdr_control()} function filters the data by p-value for each
+#' The \code{control_fdr()} function filters the data by p-value for each
 #' annotation type. If the p-values from the \code{pval_cutoff()} function are
 #' used the overall FDR will fall below the given threshold.
 #'
@@ -48,7 +48,7 @@ pval_cutoff <- function (x, fdr_threshold) {
 #'
 #' @export
 #'
-fdr_control <- function (x, pvals) {
+control_fdr <- function (x, pvals) {
 
   # Create a character vector of annotation types.
   anns <- unique(x$AnnType)
