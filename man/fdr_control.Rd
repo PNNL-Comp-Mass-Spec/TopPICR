@@ -16,6 +16,9 @@ cutoff for SwissProt must be the first element of pvals, the p-value cutoff
 for TrEMBL must be the second element of pvals, and the p-value cutoff for
 VarSplic must be the third element of pvals.}
 }
+\value{
+...
+}
 \description{
 The \code{fdr_control()} function filters the data by p-value for each
 annotation type. If the p-values from the \code{pval_cutoff()} function are

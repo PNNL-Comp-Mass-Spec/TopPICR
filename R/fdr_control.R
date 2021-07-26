@@ -9,6 +9,8 @@
 #'
 #' @param fdr_threshold ...
 #'
+#' @return ...
+#'
 #' @export
 #'
 pval_cutoff <- function (x, fdr_threshold) {
@@ -39,6 +41,8 @@ pval_cutoff <- function (x, fdr_threshold) {
 #'   cutoff for SwissProt must be the first element of pvals, the p-value cutoff
 #'   for TrEMBL must be the second element of pvals, and the p-value cutoff for
 #'   VarSplic must be the third element of pvals.
+#'
+#' @return ...
 #'
 #' @importFrom magrittr %>%
 #'

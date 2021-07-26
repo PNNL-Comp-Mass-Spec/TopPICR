@@ -11,6 +11,9 @@ pval_cutoff(x, fdr_threshold)
 
 \item{fdr_threshold}{...}
 }
+\value{
+...
+}
 \description{
 Calculates the p-value cutoff that keeps the FDR under the given threshold
 within each annotation type.
