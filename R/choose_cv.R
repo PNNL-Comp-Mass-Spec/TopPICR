@@ -18,15 +18,15 @@ choose_cv <- function (x_cluster, x) {
   # dropped before aligning the retention time, recalibrating the mass, and
   # performing hierarchical clustering. Then combine Gene and cluster_new to
   # be used as a new proteoform.
-  x_gcc <- inner_join(x, x_cluster) %>%
-    mutate(gcc = paste(Gene, cluster_new, sep = "_"))
+  x_gcc <- dplyr::inner_join(x, x_cluster) %>%
+    dplyr:: mutate(gcc = paste(Gene, cluster_new, sep = "_"))
 
   # Remove rows with multiple Feature intensity values by only keeping rows with
   # the maximum feature intensity value.
   x_gcc <- x_gcc %>%
-    group_by(ProjID, CV, Fraction, gcc) %>%
-    summarise(`Feature intensity` = max(`Feature intensity`)) %>%
-    ungroup()
+    dplyr::group_by(ProjID, CV, Fraction, gcc) %>%
+    dplyr::summarise(`Feature intensity` = max(`Feature intensity`)) %>%
+    dplyr::ungroup()
 
   # Fish out the unique proteoforms.
   unique_gcc <- unique(x_gcc$gcc)
@@ -59,31 +59,31 @@ top_cv <- function (x, cur_gcc) {
 
   # Filter the entire data frame by gcc.
   x_frac <- x %>%
-    filter(gcc == cur_gcc)
+    dplyr::filter(gcc == cur_gcc)
 
   # Check the dimension of x_frac.
   if (dim(x_frac)[1] == 1) {
 
     return (x_frac %>%
-              select(ProjID, `Feature intensity`, gcc))
+              dplyr::select(ProjID, `Feature intensity`, gcc))
 
   }
 
   # Count the number of unique project IDs that have a feature intensity value
   # for each of the three CV values.
   counts <- c(x_frac %>%
-                filter(CV == "-30") %>%
-                distinct(ProjID) %>%
+                dplyr::filter(CV == "-30") %>%
+                dplyr::distinct(ProjID) %>%
                 nrow(),
 
               x_frac %>%
-                filter(CV == "-40") %>%
-                distinct(ProjID) %>%
+                dplyr::filter(CV == "-40") %>%
+                dplyr::distinct(ProjID) %>%
                 nrow(),
 
               x_frac %>%
-                filter(CV == "-50") %>%
-                distinct(ProjID) %>%
+                dplyr::filter(CV == "-50") %>%
+                dplyr::distinct(ProjID) %>%
                 nrow())
 
   # Determine which CV value has the most project IDs with a feature intensity.
@@ -104,7 +104,7 @@ top_cv <- function (x, cur_gcc) {
     # Subset the data with the CV corresponding to the highest median feature
     # feature intensity.
     x_max_fi <- x_frac %>%
-      filter(CV == which_cv)
+      dplyr::filter(CV == which_cv)
 
     # Sum Across any ProteoForms that have multiple feature intensities per
     # project ID and CV.
@@ -117,7 +117,7 @@ top_cv <- function (x, cur_gcc) {
 
     # Subset the data by the CV with the highest number of unique project IDs.
     x_max_pids <- x_frac %>%
-      filter(CV %in% volts[which_max])
+      dplyr::filter(CV %in% volts[which_max])
 
     # Sum Across any ProteoForms that have multiple feature intensities per
     # project ID and CV.
@@ -139,11 +139,11 @@ top_fi <- function (x) {
   x_top <- x %>%
     # Group by project ID because we will take the maximum feature intensity
     # value as a representative feature intensity for each project ID.
-    group_by(ProjID) %>%
-    summarize(`Feature intensity` = max(`Feature intensity`)) %>%
+    dplyr::group_by(ProjID) %>%
+    dplyr::summarize(`Feature intensity` = max(`Feature intensity`)) %>%
     # Add the proteoform column back in the data frame because the summarize
     # function removes all columns (except ProjID and Feature intensity).
-    mutate(gcc = unique(x$gcc))
+    dplyr::mutate(gcc = unique(x$gcc))
 
   return (x_top)
 
@@ -156,8 +156,8 @@ max_fi <- function (x) {
 
   # Compute the median feature intensity by CV.
   fi_by_cv <- x %>%
-    group_by(CV) %>%
-    summarize(median_fi = median(`Feature intensity`))
+    dplyr::group_by(CV) %>%
+    dplyr::summarize(median_fi = stats::median(`Feature intensity`))
 
   # Determine which CV the highest median feature intensity belongs to.
   which_max <- which.max(fi_by_cv$median_fi)
