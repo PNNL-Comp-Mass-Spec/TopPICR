@@ -57,7 +57,7 @@ cluster <- function (x, method, height, min_size) {
     # Convert all clusters with fewer than min_size members to cluster 0.
     dplyr::mutate(cluster = list(replace(cluster, cluster %in% noise, 0))) %>%
     dplyr::select(Gene, data, cluster) %>%
-    dplyr::unnest(cols = c(data, cluster))
+    tidyr::unnest(cols = c(data, cluster))
 
   # Return the cluster data frame along with the ppm and rt errors.
   return (list(x = x_cluster,
