@@ -1,7 +1,18 @@
-# For the first function x is a list of data frames instead of a single data 
-# frame as the rest of the functions will be.
-x_10 <- function (x = list()) {
-  
+#' Combine data sets
+#'
+#' Combines a group of data sets output from TopPIC. This function also adds
+#' several variables that will be used throughout the top down workflow and
+#' removes variables that are not used.
+#'
+#' @param x A list of data frames. All data frames must have the same number of
+#' columns and the names of the columns must match exactly.
+#'
+#' @return ...
+#'
+#' @export
+#'
+combine_data <- function (x = list()) {
+
   x <- data.table::rbindlist(x) %>%
     # Remove data.table class.
     # tibble() %>%
@@ -21,7 +32,7 @@ x_10 <- function (x = list()) {
               MIScore, `#variable PTMs`, `#matched peaks`,
               `#matched fragment ions`, `Q-value (spectral FDR)`,
               `Proteoform FDR`))
-  
+
   return (x)
-  
+
 }
