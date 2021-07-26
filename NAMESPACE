@@ -2,6 +2,8 @@
 
 export(augment_annotation)
 export(combine_data)
-export(fdr_control)
+export(control_fdr)
+export(filter_accession)
+export(infer_pf)
 export(pval_cutoff)
 importFrom(magrittr,"%>%")
