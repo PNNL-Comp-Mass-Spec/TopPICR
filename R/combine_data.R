@@ -13,15 +13,17 @@
 #'
 combine_data <- function (x = list()) {
 
-  x <- data.table::rbindlist(x) %>%
+  x <- rbindlist(x) %>%
     # Remove data.table class.
     # tibble() %>%
     # Add useful variables.
     dplyr::filter(!grepl("Contaminant", `Protein accession`)) %>%
     dplyr::filter(grepl("GN=", `Protein description`)) %>%
-    dplyr::mutate(ProjID = str_extract(Dataset, "\\d{8}")) %>%
-    dplyr::mutate(LC_Column = str_sub(Dataset, start = -8)) %>%
-    dplyr::mutate(mz = (`Precursor mass` + Charge * 1.007276466621) / Charge) %>%
+    dplyr::mutate(ProjID = stringr::str_extract(Dataset, "\\d{8}")) %>%
+    dplyr::mutate(LC_Column = stringr::str_sub(Dataset, start = -8)) %>%
+    dplyr::mutate(
+      mz = (`Precursor mass` + Charge * 1.007276466621) / Charge
+    ) %>%
     dplyr::mutate(Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`)) %>%
     dplyr::mutate(isDecoy = grepl("^XXX", `Protein accession`)) %>%
     dplyr::mutate(RTmin = `Retention time` / 60) %>%

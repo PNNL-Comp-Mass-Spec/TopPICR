@@ -6,6 +6,8 @@
 #'
 #' @return ...
 #'
+#' @import data.table
+#'
 #' @export
 #'
 infer_pf <- function (x) {
@@ -15,11 +17,11 @@ infer_pf <- function (x) {
   y$AnnType <- ordered(y$AnnType, levels = c("SwissProt","VarSplic","TrEMBL"))
 
   # Convert y to a data table.
-  data.table::setDT(y)
+  setDT(y)
 
   # Order the data table by annotation, accession, and then cleanSeq. This order
   # will be carried through the call of the inference function.
-  data.table::setorder(y, AnnType, UniProtAcc, cleanSeq)
+  setorder(y, AnnType, UniProtAcc, cleanSeq)
 
   # Selects a set of accessions which maps to the most sequences. This is a
   # different method from accessions_seq which first selects sequences that only
@@ -66,9 +68,9 @@ inference <- function (x) {
 
   }
 
-  return(data.table::rbindlist(res,
-                               use.names = FALSE,
-                               fill = FALSE,
-                               idcol = NULL))
+  return(rbindlist(res,
+                   use.names = FALSE,
+                   fill = FALSE,
+                   idcol = NULL))
 
 }
