@@ -4,12 +4,12 @@
 \alias{choose_cv}
 \title{...}
 \usage{
-choose_cv(x_cluster, x)
+choose_cv(x, x_cluster)
 }
 \arguments{
-\item{x_cluster}{...}
-
 \item{x}{...}
+
+\item{x_cluster}{...}
 }
 \value{
 ...

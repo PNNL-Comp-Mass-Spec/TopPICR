@@ -14,7 +14,6 @@
 #'
 #' @export
 #'
-# ref_ds: A character string. This is the name of the reference data set.
 align_rt <- function (x, ref_ds, ...) {
 
   # Find the apex or peak of the retention time.

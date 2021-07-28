@@ -10,7 +10,7 @@ filter_accession(x, count_by, threshold = 10)
 \item{x}{...}
 
 \item{count_by}{A Character string indicating what variable observations
-should be counted by (e.g., Gene).}
+should be counted by (e.g., Gene, ProteoForm, ...).}
 
 \item{threshold}{An integer indicating the number of subjects (or project
 IDs) a UniProt accession must occur in to be kept. The default is 10.}

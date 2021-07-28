@@ -2,7 +2,9 @@
 #'
 #' ...
 #'
-#' @param x ...
+#' @param x The data frame that was used as the input to the align_rt function.
+#'   This data frame is required because the align_rt function deletes columns
+#'   that are needed in this function and other downstream functions.
 #'
 #' @param x_align A data frame output from the \code{align_rt} function.
 #'

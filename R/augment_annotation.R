@@ -58,9 +58,9 @@ augment_annotation <- function (x,
   # Add two additional columns to x_norm: Block and PercentCoverage. These
   # variables are calculated from the columns added within this function.
   x_norm <- x_norm %>%
-    dplyr::mutate(Block = str_sub(Dataset, start = 19, end = 19)) %>%
+    dplyr::mutate(Block = stringr::str_sub(Dataset, start = 19, end = 19)) %>%
     dplyr::mutate(PercentCoverage = signif(100 * (Last_AA - First_AA + 1) /
-                                             ProtLen,2))
+                                             ProtLen, 2))
 
   # Augment annotation: decoy/scrambled ----------------------------------------
 
@@ -72,8 +72,8 @@ augment_annotation <- function (x,
     Biostrings::chartr("Z", "E", .) %>%
     Biostrings::chartr("J", "I", .)
 
-  # Augment the decoy data frame. This will search all three scrambled data bases
-  # and keep all matches to each clean sequence (each value of cleanSeq).
+  # Augment the decoy data frame. This will search all three scrambled data
+  # bases and keep all matches to each clean sequence (each value of cleanSeq).
   x_decoy <- x %>%
     dplyr::filter(isDecoy) %>%
     augment(fst_decoy)
@@ -96,12 +96,19 @@ augment_annotation <- function (x,
   # Add two additional columns to x_block: Block and PercentCoverage. These
   # variables are calculated from the columns added within this function.
   x_decoy <- x_decoy %>%
-    dplyr::mutate(Block = str_sub(Dataset, start = 19, end = 19)) %>%
-    dplyr:: mutate(PercentCoverage = signif(100 * (Last_AA - First_AA + 1) /
-                                              ProtLen,2))
+    dplyr::mutate(Block = stringr::str_sub(Dataset, start = 19, end = 19)) %>%
+    dplyr::mutate(PercentCoverage = signif(100 * (Last_AA - First_AA + 1) /
+                                             ProtLen, 2))
 
   # Combine the normal and decoy proteins.
   x <- rbind(x_norm, x_decoy)
+
+  # Add a column for the ProteoForm variable.
+  x <- x %>%
+    dplyr::mutate(ProteoForm = paste(Gene, `First_AA`, `Last_AA`,
+                                     round(`Adjusted precursor mass`,
+                                           digits = -1),
+                                     sep = "_"))
 
   return (x)
 
@@ -117,9 +124,11 @@ augment <- function (x,
     # Create a new variable (or column) from the original Proteoform column.
     # This variable is a character string that only contains uppercase letters
     # from the Proteoform column. All other characters are removed.
-    dplyr::mutate(cleanSeq = gsub("\\[.+?\\]", "", Proteoform),
-                  cleanSeq = gsub("\\(|\\)", "", cleanSeq),
-                  cleanSeq = sub("^[A-Z]?\\.(.*)\\.[A-Z]?", "\\1", cleanSeq)) %>%
+    dplyr::mutate(
+      cleanSeq = gsub("\\[.+?\\]", "", Proteoform),
+      cleanSeq = gsub("\\(|\\)", "", cleanSeq),
+      cleanSeq = sub("^[A-Z]?\\.(.*)\\.[A-Z]?", "\\1", cleanSeq)
+    ) %>%
     # Only keep the newly added cleanSeq variable and the Gene column.
     dplyr::select(cleanSeq, Gene) %>%
     # Keep all unique combinations of cleanSeq and Gene. Each unique cleanSeq
@@ -143,9 +152,11 @@ augment <- function (x,
   res <- x %>%
     # In the new data frame create the cleanSeq variable (to match with the
     # augmented data frame created above).
-    dplyr::mutate(cleanSeq = gsub("\\[.+?\\]", "", Proteoform),
-                  cleanSeq = gsub("\\(|\\)", "", cleanSeq),
-                  cleanSeq = sub("^[A-Z]?\\.(.*)\\.[A-Z]?", "\\1", cleanSeq)) %>%
+    dplyr::mutate(
+      cleanSeq = gsub("\\[.+?\\]", "", Proteoform),
+      cleanSeq = gsub("\\(|\\)", "", cleanSeq),
+      cleanSeq = sub("^[A-Z]?\\.(.*)\\.[A-Z]?", "\\1", cleanSeq)
+    ) %>%
     # Match rows in res and y based on the keys (cleanSeq, UniProtAcc, and
     # AnnType) and keep all columns from both res and y.
     dplyr::inner_join(y) %>%
@@ -212,7 +223,7 @@ get_matching_uniprotacc <- function (gene,
                     UniProtAcc = acc_names_i,
                     First_AA = first_aa,
                     Last_AA = last_aa,
-                    stringsAsFactors = F) %>%
+                    stringsAsFactors = FALSE) %>%
     # Create the AnnType variable and determine which data base the sequence
     # comes from.
     dplyr::mutate(

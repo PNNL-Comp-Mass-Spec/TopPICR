@@ -9,7 +9,7 @@
 #' @param x ...
 #'
 #' @param count_by A Character string indicating what variable observations
-#'   should be counted by (e.g., Gene).
+#'   should be counted by (e.g., Gene, ProteoForm, ...).
 #'
 #' @param threshold An integer indicating the number of subjects (or project
 #'   IDs) a UniProt accession must occur in to be kept. The default is 10.

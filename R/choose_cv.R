@@ -2,9 +2,9 @@
 #'
 #' ...
 #'
-#' @param x_cluster ...
-#'
 #' @param x ...
+#'
+#' @param x_cluster ...
 #'
 #' @return ...
 #'
@@ -12,12 +12,12 @@
 #'
 #' @export
 #'
-choose_cv <- function (x_cluster, x) {
+choose_cv <- function (x, x_cluster) {
 
-  # Join x_cluster and x. This is necessary to link the cluster with the variables
-  # dropped before aligning the retention time, recalibrating the mass, and
-  # performing hierarchical clustering. Then combine Gene and cluster_new to
-  # be used as a new proteoform.
+  # Join x_cluster and x. This is necessary to link the cluster with the
+  # variables dropped before aligning the retention time, recalibrating the
+  # mass, and performing hierarchical clustering. Then combine Gene and
+  # cluster_new to be used as a new proteoform.
   x_gcc <- dplyr::inner_join(x, x_cluster) %>%
     dplyr:: mutate(gcc = paste(Gene, cluster_new, sep = "_"))
 

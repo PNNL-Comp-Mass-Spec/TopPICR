@@ -7,7 +7,9 @@
 recalibrate_mass(x, x_align, ref_ds)
 }
 \arguments{
-\item{x}{...}
+\item{x}{The data frame that was used as the input to the align_rt function.
+This data frame is required because the align_rt function deletes columns
+that are needed in this function and other downstream functions.}
 
 \item{x_align}{A data frame output from the \code{align_rt} function.}
 

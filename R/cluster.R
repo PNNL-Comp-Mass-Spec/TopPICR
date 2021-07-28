@@ -32,7 +32,9 @@ cluster <- function (x, method, height, min_size) {
     # x_47 function. The normalized recalibrated mass will be used for
     # clustering. This means the h argument in the cutree function will
     # correspond to the standard deviation.
-    dplyr::mutate(NormRecalMass = log10(RecalMass) / log10(1 + x[[2]] / 1e6)) %>%
+    dplyr::mutate(
+      NormRecalMass = log10(RecalMass) / log10(1 + x[[2]] / 1e6)
+    ) %>%
     # Normalize the aligned rt according to the rt error that was computed in
     # the x_47 function. The normalized rt will be used for clustering. This
     # means the h argument in the cutree function will correspond to the
