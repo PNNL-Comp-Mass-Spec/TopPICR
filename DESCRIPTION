@@ -20,5 +20,6 @@ Imports:
     dplyr,
     magrittr,
     rlang,
+    stringr,
     tibble,
     tidyr
