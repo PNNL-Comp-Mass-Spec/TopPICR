@@ -2,9 +2,9 @@
 % Please edit documentation in R/merge_clusters.R
 \name{merge_clusters}
 \alias{merge_clusters}
-\title{...}
+\title{Merge clusters using at mass/retention time envelope}
 \usage{
-merge_clusters(x, min_size, ppm_cutoff, ppm_range, rt_range)
+merge_clusters(clusters_df, oc_cutoff)
 }
 \arguments{
 \item{x}{...}
