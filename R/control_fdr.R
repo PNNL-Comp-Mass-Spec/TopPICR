@@ -111,12 +111,8 @@ make_interval <- function (x, fdr_threshold) {
   # the largest p-value cutoff that produces an FDR below the threshold.
   summary_pvals <- x %>%
     dplyr::pull(`P-value`) %>%
-    summary() %>%
+    quantile() %>%
     as.numeric()
-
-  # Remove the fourth element of the summary vector. This is the mean and is not
-  # necessary for this calculation.
-  summary_pvals <- summary_pvals[-4]
 
   # Compute the FDR for each p-value in the summary.
   fdrs <- sapply(summary_pvals, compute_fdr, x = x)
