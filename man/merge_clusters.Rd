@@ -4,7 +4,7 @@
 \alias{merge_clusters}
 \title{Merge clusters using at mass/retention time envelope}
 \usage{
-merge_clusters(clusters_df, oc_cutoff)
+merge_clusters(x, min_size, ppm_cutoff, ppm_range, rt_range)
 }
 \arguments{
 \item{x}{...}

@@ -52,7 +52,7 @@ get_mergeable_clusters <- function(x, oc_cutoff){
 # Recursion
 # not an efficient algorithm, especially given the updates of cluster membership
 # after every iteration. But it works.
-merge_clusters <- function(clusters_df, oc_cutoff){
+merge_clusters2 <- function(clusters_df, oc_cutoff){
   ij <- get_mergeable_clusters(clusters_df, oc_cutoff)
   if(is.null(ij)){
     return(clusters_df)
@@ -60,14 +60,14 @@ merge_clusters <- function(clusters_df, oc_cutoff){
     # assumes that "i" (ij[1]) is larger cluster than "j" (ij[2]). This can be
     # achieved by pre-ordering.
     clusters_df[clusters_df$cluster == ij[2], "cluster"] <- ij[1]
-    merge_clusters(clusters_df, oc_cutoff)
+    merge_clusters2(clusters_df, oc_cutoff)
   }
 }
 
 merge_clusters_wrapper <- function (x, oc_cutoff) {
   idx0 <- x$cluster == 0
   x$cluster_new <- 0
-  y <- merge_clusters(x[!idx0, c("Proteoform","cluster")], oc_cutoff)
+  y <- merge_clusters2(x[!idx0, c("Proteoform","cluster")], oc_cutoff)
   x$cluster_new[!idx0] <- y$cluster
   x$Gene <- NULL # removes duplicate gene due to the group/do functions.
   return (x)
