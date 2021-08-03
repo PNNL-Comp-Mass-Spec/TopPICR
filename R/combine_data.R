@@ -13,6 +13,16 @@
 #'
 combine_data <- function (x = list()) {
 
+  # Create a character vector of variables that are not needed at any point in
+  # the top down workflow. They will be removed with dplyr::any_of. The function
+  # will not throw an error if any of the variables listed are not present in
+  # the data set.
+  useless <- c("Data file name", "Prsm ID", "Spectrum ID", "Fragmentation",
+               "Retention time", "#peaks", "Proteoform ID", "Feature score",
+               "MIScore", "#variable PTMs", "#matched peaks",
+               "#matched fragment ions", "Q-value (spectral FDR)",
+               "Proteoform FDR")
+
   x <- rbindlist(x) %>%
     # Remove data.table class.
     # tibble() %>%
@@ -29,11 +39,7 @@ combine_data <- function (x = list()) {
     dplyr::mutate(RTmin = `Retention time` / 60) %>%
     # Remove not so useful variables. In other words, remove variables that will
     # never be used or thought of again.
-    dplyr::select(-c(`Data file name`, `Prsm ID`, `Spectrum ID`, Fragmentation,
-                     `Retention time`, `#peaks`, `Proteoform ID`,
-                     `Feature score`, MIScore, `#variable PTMs`,
-                     `#matched peaks`, `#matched fragment ions`,
-                     `Q-value (spectral FDR)`, `Proteoform FDR`))
+    dplyr::select(-dplyr::any_of(useless))
 
   return (x)
 
