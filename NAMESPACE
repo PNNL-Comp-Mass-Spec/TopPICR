@@ -2,7 +2,7 @@
 
 export(align_rt)
 export(augment_annotation)
-export(choose_cv)
+export(choose_fi)
 export(cluster)
 export(combine_data)
 export(control_fdr)
