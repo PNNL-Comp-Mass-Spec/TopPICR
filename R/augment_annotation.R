@@ -159,11 +159,7 @@ augment <- function (x,
     ) %>%
     # Match rows in res and y based on the keys (cleanSeq, UniProtAcc, and
     # AnnType) and keep all columns from both res and y.
-    dplyr::inner_join(y) %>%
-    # Remove the `First residue` column.
-    dplyr::select(-`First residue`) %>%
-    # Remove the `Last residue` variable.
-    dplyr::select(-`Last residue`)
+    dplyr::inner_join(y)
 
   return (res)
 

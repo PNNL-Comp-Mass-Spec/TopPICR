@@ -21,7 +21,7 @@ combine_data <- function (x = list()) {
                "Retention time", "#peaks", "Proteoform ID", "Feature score",
                "MIScore", "#variable PTMs", "#matched peaks",
                "#matched fragment ions", "Q-value (spectral FDR)",
-               "Proteoform FDR")
+               "Proteoform FDR", "First residue", "Last residue")
 
   x <- rbindlist(x) %>%
     # Remove data.table class.
