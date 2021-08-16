@@ -4,16 +4,12 @@
 \alias{choose_fi}
 \title{Choose a representative feature intensity}
 \usage{
-choose_fi(x, x_cluster, by)
+choose_fi(x, x_cluster)
 }
 \arguments{
 \item{x}{...}
 
 \item{x_cluster}{...}
-
-\item{by}{A character string corresponding to the variables that will be used
-to select a representative feature intensity value. Can be either "cv" or
-"cv_fraction".}
 }
 \value{
 ...
