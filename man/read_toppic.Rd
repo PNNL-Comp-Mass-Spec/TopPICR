@@ -7,12 +7,23 @@
 read_toppic(file_path, file_name, ...)
 }
 \arguments{
-\item{file_path}{...}
+\item{file_path}{A character string specifying the path to the folder with
+the TopPIC output files.}
 
-\item{file_name}{...}
+\item{file_name}{A character vector of file names containing the files output
+from TopPIC. The output from these files will be combined into one data
+frame.}
 
 \item{...}{Additional arguments to the \code{read.delim} function.}
 }
+\value{
+A data.table where all the data from the input files are combined
+row wise.
+}
 \description{
-...
+A wrapper function to the \code{read.delim} function that is specific to the
+files output by TopPIC. Metadata is always included at the beginning of the
+TopPIC file and a header is always provided. This function removes all lines
+containing metadata and reads in the remaining lines of the file starting
+with the header.
 }
