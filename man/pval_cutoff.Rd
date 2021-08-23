@@ -7,12 +7,17 @@
 pval_cutoff(x, fdr_threshold)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{augment_annotation}
+function.}
 
-\item{fdr_threshold}{...}
+\item{fdr_threshold}{A value between 0 and 1 indicating the desired FDR
+control level.}
 }
 \value{
-...
+A vector with three elements. These elements correspond to the
+E-value cutoff for the three annotation types (SwissProt, VarSplic, and
+TrEMBL). Note: the order of the annotation types depends on the order they
+appear in the AnnType column.
 }
 \description{
 Calculates the p-value cutoff that keeps the FDR under the given threshold

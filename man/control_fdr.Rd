@@ -4,23 +4,25 @@
 \alias{control_fdr}
 \title{Filter the data by p-value}
 \usage{
-control_fdr(x, pvals)
+control_fdr(x, e_vals)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{augment_annotation}
+function.}
 
-\item{pvals}{A vector of three numeric values to be used as p-value cutoffs.
-The p-value cutoffs must be in the order of unique(x$AnnType). For example,
-if unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic" then the p-value
-cutoff for SwissProt must be the first element of pvals, the p-value cutoff
-for TrEMBL must be the second element of pvals, and the p-value cutoff for
-VarSplic must be the third element of pvals.}
+\item{e_vals}{A vector of three numeric values to be used as E-value cutoffs.
+The E-value cutoffs must be in the order of unique(x$AnnType). For example,
+if unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic" then the E-value
+cutoff for SwissProt must be the first element of e_vals, the E-value
+cutoff for TrEMBL must be the second element of e_vals, and the E-value
+cutoff for VarSplic must be the third element of e_vals.}
 }
 \value{
-...
+A \code{data.table} with the rows removed that will produce an FDR
+below the given threshold at the gene level.
 }
 \description{
-The \code{control_fdr()} function filters the data by p-value for each
-annotation type. If the p-values from the \code{pval_cutoff()} function are
+The \code{control_fdr()} function filters the data by E-value for each
+annotation type. If the E-values from the \code{eval_cutoff()} function are
 used the overall FDR will fall below the given threshold.
 }
