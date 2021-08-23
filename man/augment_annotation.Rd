@@ -2,30 +2,45 @@
 % Please edit documentation in R/augment_annotation.R
 \name{augment_annotation}
 \alias{augment_annotation}
-\title{Augment}
+\title{Include additional variables and UniProt accessions}
 \usage{
-augment_annotation(
-  x,
-  fst_path_norm,
-  fst_path_decoy,
-  fst_file_norm,
-  fst_file_decoy
-)
+augment_annotation(x, fst_path, fst_name)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{read_toppic} function.}
 
-\item{fst_path_norm}{...}
+\item{fst_path}{A character string specifying the path to the protein
+database (.fasta) file.}
 
-\item{fst_path_decoy}{...}
-
-\item{fst_file_norm}{...}
-
-\item{fst_file_decoy}{...}
+\item{fst_name}{A character string containing the name of the .fasta file.}
 }
 \value{
-...
+A \code{data.table} with all protein accessions that match each amino
+acid sequence, not just the highest scoring accession. The number of rows
+in the output could be much larger than the number of rows in the input
+because all accessions for each sequence are included. The following
+variables have been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{mz} \tab \verb{Prsm ID} \cr
+   \code{Gene} \tab \verb{Spectrum ID} \cr
+   \code{isDecoy} \tab \code{Fragmentation} \cr
+   \code{RTmin} \tab \verb{Retention time} \cr
+   \code{ProtLen} \tab \verb{#peaks} \cr
+   \code{PercentCoverage} \tab \verb{Proteoform ID} \cr
+    \tab \verb{Feature score} \cr
+    \tab \code{MIScore} \cr
+    \tab \verb{#variable PTMs} \cr
+    \tab \verb{#matched peaks} \cr
+    \tab \verb{#matched fragment ions} \cr
+    \tab \verb{Q-value (spectral FDR)} \cr
+    \tab \verb{Proteoform FDR} \cr
+    \tab \verb{First residue} \cr
+    \tab \verb{Last residue} \cr
+}
 }
 \description{
-...
+All UniProt accessions that match each amino acid sequence will be added to
+the \code{data.table}. Currently the \code{data.table} only consits of the
+highest scoring UniProt accession for each amino acid sequence. Additional
+variables are also created from the current variables.
 }

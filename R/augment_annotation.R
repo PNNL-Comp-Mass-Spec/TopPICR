@@ -1,44 +1,107 @@
-#' Augment
+#' Include additional variables and UniProt accessions
 #'
-#' ...
+#' All UniProt accessions that match each amino acid sequence will be added to
+#' the \code{data.table}. Currently the \code{data.table} only consits of the
+#' highest scoring UniProt accession for each amino acid sequence. Additional
+#' variables are also created from the current variables.
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{read_toppic} function.
 #'
-#' @param fst_path_norm ...
+#' @param fst_path A character string specifying the path to the protein
+#'   database (.fasta) file.
 #'
-#' @param fst_path_decoy ...
+#' @param fst_name A character string containing the name of the .fasta file.
 #'
-#' @param fst_file_norm ...
+#' @return A \code{data.table} with all protein accessions that match each amino
+#'   acid sequence, not just the highest scoring accession. The number of rows
+#'   in the output could be much larger than the number of rows in the input
+#'   because all accessions for each sequence are included. The following
+#'   variables have been added/removed:
 #'
-#' @param fst_file_decoy ...
+#'   | Added             | Removed                  |
+#'   | ----------------- | ------------------------ |
+#'   | `mz`              | `Prsm ID`                |
+#'   | `Gene`            | `Spectrum ID`            |
+#'   | `isDecoy`         | `Fragmentation`          |
+#'   | `RTmin`           | `Retention time`         |
+#'   | `ProtLen`         | `#peaks`                 |
+#'   | `PercentCoverage` | `Proteoform ID`          |
+#'   |                   | `Feature score`          |
+#'   |                   | `MIScore`                |
+#'   |                   | `#variable PTMs`         |
+#'   |                   | `#matched peaks`         |
+#'   |                   | `#matched fragment ions` |
+#'   |                   | `Q-value (spectral FDR)` |
+#'   |                   | `Proteoform FDR`         |
+#'   |                   | `First residue`          |
+#'   |                   | `Last residue`           |
 #'
-#' @return ...
+#' @md
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
 augment_annotation <- function (x,
-                                fst_path_norm,
-                                fst_path_decoy,
-                                fst_file_norm,
-                                fst_file_decoy) {
+                                fst_path,
+                                fst_name) {
 
-  # Augment annotation: normal -------------------------------------------------
+  #!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!
+  # Need to decide how the Data file name and CV variables will be treated for
+  # the rest of the workflow.
+  #!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!#!
 
-  # Produce an AAStringSet object for the normal sequences.
-  fst_norm <- Biostrings::readAAStringSet(file.path(fst_path_norm,
-                                                    fst_file_norm)) %>%
+  # Filter data and include additional variables -------------------------------
+
+  # Create a character vector of variables that are not needed at any point in
+  # the top down workflow. They will be removed with dplyr::any_of. The function
+  # will not throw an error if any of the variables listed are not present in
+  # the data set.
+  useless <- c("Prsm ID", "Spectrum ID", "Fragmentation", "Retention time",
+               "#peaks", "Proteoform ID", "Feature score", "MIScore",
+               "#variable PTMs", "#matched peaks", "#matched fragment ions",
+               "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
+               "Last residue")
+
+  x <- x %>%
+    # Filter data based on protein accession and description variables.
+    dplyr::filter(grepl("GN=", `Protein description`)) %>%
+    # Add useful variables.
+    dplyr::mutate(
+      mz = (`Precursor mass` + Charge * 1.007276466621) / Charge
+    ) %>%
+    dplyr::mutate(Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`)) %>%
+    dplyr::mutate(isDecoy = grepl("^DECOY", `Protein accession`)) %>%
+    dplyr::mutate(RTmin = `Retention time` / 60) %>%
+    # Remove not so useful variables.
+    dplyr::select(-dplyr::any_of(useless))
+
+  # Assemble AAStringSet objects -----------------------------------------------
+
+  # Produce an AAStringSet object from the combined fasta file. This will be
+  # separated into normal and decoy AAStringSet objects later.
+  fst_both <- Biostrings::readAAStringSet(file.path(fst_path,
+                                                    fst_name)) %>%
     Biostrings::chartr("X", "A", .) %>%
     Biostrings::chartr("B", "D", .) %>%
     Biostrings::chartr("Z", "E", .) %>%
     Biostrings::chartr("J", "I", .)
 
+  # Extract all entries for normal proteins (proteins whose names start with
+  # either sp or tr).
+  fst_norm <- fst_both[grepl("^(sp|tr)", fst_both@ranges@NAMES)]
+
+  # Extract all entries for scrambled proteins (proteins whose names start with
+  # DECOY).
+  fst_decoy <- fst_both[grepl("^DECOY", fst_both@ranges@NAMES)]
+
+  # Augment annotation: normal -------------------------------------------------
+
   # Augment the normal data frame. This will search all three normal data bases
   # and keep all matches to each clean sequence (each value of cleanSeq).
   x_norm <- x %>%
     dplyr::filter(!isDecoy) %>%
-    augment(fst_norm) # This takes a long time ~1 hour.
+    augment(fst_norm)
 
   # Shorten the names of the names attribute of the AAStringSet to just the
   # UniProt accession number.
@@ -55,22 +118,13 @@ augment_annotation <- function (x,
   # Add the ProtLen column to x_norm by matching to the UniProtAcc column.
   x_norm <- dplyr::inner_join(x_norm, prot_len_norm)
 
-  # Add two additional columns to x_norm: Block and PercentCoverage. These
-  # variables are calculated from the columns added within this function.
+  # Add PercentCoverage to x_norm. This is the percentage each observed amino
+  # acid sequence matches the reference protein's amino acid sequence.
   x_norm <- x_norm %>%
-    dplyr::mutate(Block = stringr::str_sub(Dataset, start = 19, end = 19)) %>%
     dplyr::mutate(PercentCoverage = signif(100 * (Last_AA - First_AA + 1) /
                                              ProtLen, 2))
 
   # Augment annotation: decoy/scrambled ----------------------------------------
-
-  # Generate an AAStringSet object for the decoy sequences.
-  fst_decoy <- Biostrings::readAAStringSet(file.path(fst_path_decoy,
-                                                     fst_file_decoy)) %>%
-    Biostrings::chartr("X", "A", .) %>%
-    Biostrings::chartr("B", "D", .) %>%
-    Biostrings::chartr("Z", "E", .) %>%
-    Biostrings::chartr("J", "I", .)
 
   # Augment the decoy data frame. This will search all three scrambled data
   # bases and keep all matches to each clean sequence (each value of cleanSeq).
@@ -93,10 +147,9 @@ augment_annotation <- function (x,
   # Add the ProtLen column to x_norm by matching to the UniProtAcc column.
   x_decoy <- dplyr::inner_join(x_decoy, prot_len_decoy)
 
-  # Add two additional columns to x_block: Block and PercentCoverage. These
-  # variables are calculated from the columns added within this function.
+  # Add PercentCoverage to x_decoy. This is the percentage each observed amino
+  # acid sequence matches the reference protein's amino acid sequence.
   x_decoy <- x_decoy %>%
-    dplyr::mutate(Block = stringr::str_sub(Dataset, start = 19, end = 19)) %>%
     dplyr::mutate(PercentCoverage = signif(100 * (Last_AA - First_AA + 1) /
                                              ProtLen, 2))
 
@@ -223,11 +276,11 @@ get_matching_uniprotacc <- function (gene,
     # Create the AnnType variable and determine which data base the sequence
     # comes from.
     dplyr::mutate(
-      AnnType = dplyr::case_when(grepl("^(XXX_)?sp\\|[^-]*-\\d+\\|.*",
+      AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
                                        names_i) ~ "VarSplic",
-                                 grepl("^(XXX_)?tr.*",
+                                 grepl("^(DECOY_)?tr.*",
                                        names_i) ~ "TrEMBL",
-                                 grepl("^(XXX_)?sp\\|[^-]*\\|.*",
+                                 grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
                                        names_i) ~ "SwissProt",
                                  TRUE ~ NA_character_)
     ) %>%
