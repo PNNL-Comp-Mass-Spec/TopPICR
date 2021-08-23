@@ -24,14 +24,14 @@
 #'   | `Gene`            | `Spectrum ID`            |
 #'   | `isDecoy`         | `Fragmentation`          |
 #'   | `RTmin`           | `Retention time`         |
-#'   | `ProtLen`         | `#peaks`                 |
-#'   | `PercentCoverage` | `Proteoform ID`          |
-#'   |                   | `Feature score`          |
-#'   |                   | `MIScore`                |
-#'   |                   | `#variable PTMs`         |
-#'   |                   | `#matched peaks`         |
-#'   |                   | `#matched fragment ions` |
-#'   |                   | `Q-value (spectral FDR)` |
+#'   | `cleanSeq`        | `#peaks`                 |
+#'   | `UniProtAcc`      | `Proteoform ID`          |
+#'   | `First_AA`        | `Feature score`          |
+#'   | `Last_AA`         | `MIScore`                |
+#'   | `AnnType`         | `#variable PTMs`         |
+#'   | `ProtLen`         | `#matched peaks`         |
+#'   | `PercentCoverage` | `#matched fragment ions` |
+#'   | `ProteoForm`      | `Q-value (spectral FDR)` |
 #'   |                   | `Proteoform FDR`         |
 #'   |                   | `First residue`          |
 #'   |                   | `Last residue`           |
