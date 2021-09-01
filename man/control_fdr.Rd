@@ -2,7 +2,7 @@
 % Please edit documentation in R/control_fdr.R
 \name{control_fdr}
 \alias{control_fdr}
-\title{Filter the data by p-value}
+\title{Filter the data by E-value}
 \usage{
 control_fdr(x, e_vals)
 }

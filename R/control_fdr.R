@@ -1,8 +1,8 @@
 # FDR control preliminary functions --------------------------------------------
 
-#' Calculate p-value cutoff
+#' Calculate E-value cutoff
 #'
-#' Calculates the p-value cutoff that keeps the FDR under the given threshold
+#' Calculates the E-value cutoff that keeps the FDR under the given threshold
 #' within each annotation type.
 #'
 #' @param x A \code{data.table} output from the \code{augment_annotation}
@@ -18,12 +18,12 @@
 #'
 #' @export
 #'
-pval_cutoff <- function (x, fdr_threshold) {
+eval_cutoff <- function (x, fdr_threshold) {
 
   # Create a character vector of annotation types.
   anns <- unique(x$AnnType)
 
-  # Compute the p-value cutoff for each of the annotation types.
+  # Compute the E-value cutoff for each of the annotation types.
   e_vals <- sapply(anns, find_cutoff, x = x, fdr_threshold = fdr_threshold)
 
   return (e_vals)
@@ -32,7 +32,7 @@ pval_cutoff <- function (x, fdr_threshold) {
 
 # FDR control main function ----------------------------------------------------
 
-#' Filter the data by p-value
+#' Filter the data by E-value
 #'
 #' The \code{control_fdr()} function filters the data by E-value for each
 #' annotation type. If the E-values from the \code{eval_cutoff()} function are
@@ -60,7 +60,7 @@ control_fdr <- function (x, e_vals) {
   # Create a character vector of annotation types.
   anns <- unique(x$AnnType)
 
-  # Only keep the rows with a p-value below the calculated FDR threshold for
+  # Only keep the rows with a E-value below the calculated FDR threshold for
   # each of the three annotation types (SwissProt, VarSplic, TrEMBL). Remove the
   # column that specifies if a protein is scrambled.
   x <- x %>%
@@ -84,81 +84,110 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
     dplyr::filter(AnnType == ann_type) %>%
     dplyr::select(`E-value`, Gene, isDecoy)
 
-  # Initialize the interval vector to the minimum and maximum values of the
-  # `E-value` vector. This will be used to start the while loop.
-  pval_interval <- c(min(x_filtered$`E-value`),
-                     max(x_filtered$`E-value`))
+  # Extract the minimum and maximum e-values for the given annotation type.
+  # These values will be used throughout the function.
+  mini <- min(x_filtered$`E-value`)
+  maxi <- max(x_filtered$`E-value`)
 
-  # Reduce the `E-value` vector until the interval consists on only one value.
-  # This will happen when all p-values in the `E-value` vector produce and FDR
-  # less than the threshold.
-  while (length(pval_interval) != 1) {
+  # Compute the FDR for the minimum and maximum values of the E-value vector. If
+  # the FDR for the minimum value is larger than the threshold throw an error
+  # because the FDR can never be below the threshold. If the FDR for the maximum
+  # value is already below the threshold no filtering needs to occur.
+  min_fdr <- compute_fdr(eval_cutoff = mini, x = x_filtered)
+  max_fdr <- compute_fdr(eval_cutoff = maxi, x = x_filtered)
 
-    # Only keep the rows with p-values within the p-value interval.
-    filtad <- x_filtered %>%
-      # Only keep rows whose p-value is larger than the lower limit AND smaller
-      # than the upper limit.
-      dplyr::filter(`E-value` > pval_interval[[1]] &
-                      `E-value` < pval_interval[[2]])
 
-    # Generate a new p-value interval based on the filtered data set.
-    pval_interval <- make_interval(x = filtad,
-                                   fdr_threshold = fdr_threshold)
+  # Check the FDR for the minimum E-value. If it is larger than the cutoff
+  # provided give a warning that the FDR for the current annotation type cannot
+  # be below the FDR threshold.
+  if (min_fdr > fdr_threshold) {
 
-  }
+    warning (paste("For the given data the ",
+                   ann_type,
+                   " FDR cannot be below the specified threshold.",
+                   sep = ""))
 
-  return (pval_interval)
-
-}
-
-make_interval <- function (x, fdr_threshold) {
-
-  # Create a summary of the p-values for the given annotation type. This summary
-  # will be used to find a smaller range of p-values to search in order to find
-  # the largest p-value cutoff that produces an FDR below the threshold.
-  summary_e_vals <- x %>%
-    dplyr::pull(`E-value`) %>%
-    quantile() %>%
-    as.numeric()
-
-  # Compute the FDR for each p-value in the summary.
-  fdrs <- sapply(summary_e_vals, compute_fdr, x = x)
-
-  # Find which FDR values is above the FDR threshold. This vector will be used
-  # to find the p-values that produce FDR values that are just above and just
-  # below the threshold. The largest value in this vector corresponds to the
-  # index of the p-value in summary_e_vals that still has an FDR below the
-  # threshold. This p-value and the following p-value (in the summary_e_vals
-  # vector) will be used later for the fine tune search.
-  which_fdrs <- which(fdrs < fdr_threshold)
-
-  # Compare the length of the which_fdrs and summary_e_vals vectors. If they are
-  # the same length the largest p-value for the given annotation type still
-  # produces an FDR below the threshold and this p-value can be returned for
-  # later filtering.
-  if (length(summary_e_vals) == length(which_fdrs)) {
-
-    # Return the maximum p-value.
-    return (summary_e_vals[[5]])
-
-    # Runs when the length of which_fdrs is smaller than summary_e_vals. This
-    # occurs when there is at least one p-value in summary_e_vals that creates an
-    # FDR less than the threshold and at least one p-value in summary_e_vals that
-    # creates an FDR greater than the threshold.
-  } else {
-
-    # Return the p-value interval that will be searched.
-    return (c(summary_e_vals[[max(which_fdrs)]],
-              summary_e_vals[[(max(which_fdrs) + 1)]]))
+    return (mini)
 
   }
 
+  # Check the FDR for the maximum E-value. If it is smaller than the cutoff
+  # provided no further steps need to be taken in order to keep the FDR below
+  # the cutoff.
+  if (max_fdr < fdr_threshold) {
+
+    return (maxi)
+
+  }
+
+  # Order the E-values from smallest to largest. These values will be used to
+  # calculate the FDR until the FDR passes the threshold.
+  ordered <- x_filtered %>%
+    dplyr::select(`E-value`) %>%
+    dplyr::arrange(`E-value`) %>%
+    dplyr::pull(`E-value`)
+
+  # Divide the ordered E-values into equal sections. The E-values from the
+  # selected indices will be used to calculate the FDR in search of the E-value
+  # that produces and FDR as close as possible to the given FDR threshold.
+  inds <- floor(quantile(1:dim(x_filtered)[[1]]))
+
+  # Create a variable that is the distance between the first value of inds and
+  # the last value of inds. This difference is the number of E-values between
+  # the min and max of the index vector (or number of E-values in the vector).
+  differ <- inds[[5]] - inds[[1]]
+
+  counter <- 1
+
+  while (differ >= 2) {
+
+    print(counter)
+
+    counter <- counter + 1
+
+    # Extract the E-values from the ordered E-value vector that correspond to
+    # the indices from the index summary.
+    summary_evals <- ordered[inds]
+
+    # Compute the FDR for each E-value in the summary. This vector will be used
+    # to further subset the E-value vector until it finds the largest E-value
+    # that produces an FDR below the specified threshold.
+    fdrs <- sapply(summary_evals, compute_fdr, x = x_filtered)
+
+    # Find which FDR values are above the FDR threshold. The smallest value in
+    # this vector corresponds to the index of the E-value in summary_evals that
+    # has an FDR above the threshold. This E-value will be used to subset and
+    # order the `E-value` vector and the FDR will be calculated for each
+    # subsequent E-value until the FDR falls below the threshold.
+    which_fdrs <- which(fdrs < fdr_threshold)
+
+    # Nab the largest E-value that produces an FDR below the threshold. This is
+    # the E-value that will be returned when either of the conditions that break
+    # the while loop are met.
+    maximin <- ordered[[inds[[max(which_fdrs)]]]]
+
+    # Create a new inds vector for the next iteration of the while loop.
+    # Reduce the space of E-values searched by only considering the indices
+    # between the index for the E-value just above and just below the FDR
+    # threshold.
+    inds <- floor(quantile(
+      inds[[max(which_fdrs)]]:inds[[(max(which_fdrs) + 1)]]
+    ))
+
+    # Update the difference in indices.
+    differ <- inds[[5]] - inds[[1]]
+
+  }
+
+  # Return the largest E-value that still produces an FDR below the threshold.
+  return (maximin)
+
 }
 
-compute_fdr <- function (pval_cutoff, x) {
+compute_fdr <- function (eval_cutoff, x) {
 
   fdr <- x %>%
-    dplyr::filter(`E-value` <= pval_cutoff) %>%
+    dplyr::filter(`E-value` <= eval_cutoff) %>%
     dplyr::distinct(Gene, isDecoy) %>%
     dplyr::pull(isDecoy) %>%
     # Mean of a logical vector gives the proportion of TRUE values.
