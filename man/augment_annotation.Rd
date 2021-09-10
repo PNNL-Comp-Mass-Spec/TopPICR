@@ -21,21 +21,14 @@ in the output could be much larger than the number of rows in the input
 because all accessions for each sequence are included. The following
 variables have been added/removed:\tabular{ll}{
    Added \tab Removed \cr
-   \code{mz} \tab \verb{Prsm ID} \cr
-   \code{Gene} \tab \verb{Spectrum ID} \cr
-   \code{isDecoy} \tab \code{Fragmentation} \cr
-   \code{RTmin} \tab \verb{Retention time} \cr
-   \code{cleanSeq} \tab \verb{#peaks} \cr
-   \code{UniProtAcc} \tab \verb{Proteoform ID} \cr
-   \code{First_AA} \tab \verb{Feature score} \cr
-   \code{Last_AA} \tab \code{MIScore} \cr
-   \code{AnnType} \tab \verb{#variable PTMs} \cr
-   \code{ProtLen} \tab \verb{#matched peaks} \cr
-   \code{PercentCoverage} \tab \verb{#matched fragment ions} \cr
-   \code{ProteoForm} \tab \verb{Q-value (spectral FDR)} \cr
-    \tab \verb{Proteoform FDR} \cr
-    \tab \verb{First residue} \cr
-    \tab \verb{Last residue} \cr
+   \code{cleanSeq} \tab  \cr
+   \code{AccMap} \tab  \cr
+   \code{UniProtAcc} \tab  \cr
+   \code{protLength} \tab  \cr
+   \code{firstAA} \tab  \cr
+   \code{lastAA} \tab  \cr
+   \code{AnnType} \tab  \cr
+   \code{PercentCoverage} \tab  \cr
 }
 }
 \description{
