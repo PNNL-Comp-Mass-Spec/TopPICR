@@ -18,12 +18,28 @@ frame.}
 }
 \value{
 A data.table where all the data from the input files are combined
-row wise.
+row wise. The following variables have been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{mz} \tab \verb{Prsm ID} \cr
+   \code{Gene} \tab \verb{Spectrum ID} \cr
+   \code{isDecoy} \tab \code{Fragmentation} \cr
+   \code{RTmin} \tab \verb{Retention time} \cr
+   \code{Dataset} \tab \verb{#peaks} \cr
+   \code{CV} \tab \verb{Proteoform ID} \cr
+    \tab \verb{Feature score} \cr
+    \tab \code{MIScore} \cr
+    \tab \verb{#variable PTMs} \cr
+    \tab \verb{#matched peaks} \cr
+    \tab \verb{#matched fragment ions} \cr
+    \tab \verb{Spectrum-level Q-value} \cr
+    \tab \verb{Proteoform-level Q-value} \cr
+}
 }
 \description{
 A wrapper function to the \code{read.delim} function that is specific to the
 files output by TopPIC. Metadata is always included at the beginning of the
 TopPIC file and a header is always provided. This function removes all lines
 containing metadata and reads in the remaining lines of the file starting
-with the header.
+with the header. Variables needed for the remainder of the TopPICR workflow
+are added and variables not used by TopPICR are removed.
 }
