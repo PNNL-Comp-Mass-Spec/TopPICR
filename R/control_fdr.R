@@ -137,13 +137,7 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
   # the min and max of the index vector (or number of E-values in the vector).
   differ <- inds[[5]] - inds[[1]]
 
-  counter <- 1
-
   while (differ >= 2) {
-
-    print(counter)
-
-    counter <- counter + 1
 
     # Extract the E-values from the ordered E-value vector that correspond to
     # the indices from the index summary.
