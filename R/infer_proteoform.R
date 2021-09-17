@@ -1,10 +1,16 @@
-#' ...
+#' Proteoform inference
 #'
-#' ...
+#' The \code{infer_pf} function finds the smallest set of UniProt accessions
+#' (\code{UniProtAcc}) that maps to the largest number of amino acid sequences
+#' (\code{cleanSeq}).
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{control_fdr} function.
 #'
-#' @return ...
+#' @return A \code{data.table} with all rows removed corresponding to the
+#'   UniProt accessions that do not belong to the set of accessions that map to
+#'   the largest number of \code{cleanSeq}s. The output from this function needs
+#'   to be kept for the rest of the \code{TopPICR} workflow as it will be used
+#'   by later functions.
 #'
 #' @import data.table
 #'
@@ -38,7 +44,7 @@ infer_pf <- function (x) {
 
 }
 
-# x_30 auxiliary functions -----------------------------------------------------
+# infer_pf auxiliary functions -------------------------------------------------
 
 inference <- function (x) {
 

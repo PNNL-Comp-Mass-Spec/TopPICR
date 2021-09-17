@@ -2,16 +2,22 @@
 % Please edit documentation in R/infer_proteoform.R
 \name{infer_pf}
 \alias{infer_pf}
-\title{...}
+\title{Proteoform inference}
 \usage{
 infer_pf(x)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{control_fdr} function.}
 }
 \value{
-...
+A \code{data.table} with all rows removed corresponding to the
+UniProt accessions that do not belong to the set of accessions that map to
+the largest number of \code{cleanSeq}s. The output from this function needs
+to be kept for the rest of the \code{TopPICR} workflow as it will be used
+by later functions.
 }
 \description{
-...
+The \code{infer_pf} function finds the smallest set of UniProt accessions
+(\code{UniProtAcc}) that maps to the largest number of amino acid sequences
+(\code{cleanSeq}).
 }
