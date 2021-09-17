@@ -28,6 +28,11 @@ cluster <- function (x, method, height, min_size) {
 
   x_cluster <- x[[1]] %>%
     dplyr::group_by(Gene) %>%
+    # Remove rows corresponding to Genes with only one observation because
+    # hclust will throw an error unless there are at least two observations.
+    dplyr::add_count(name = "obs") %>%
+    dplyr::filter(obs > 1) %>%
+    dplyr::select(-obs) %>%
     # Normalize the mass according to the ppm error that was computed in the
     # x_47 function. The normalized recalibrated mass will be used for
     # clustering. This means the h argument in the cutree function will
