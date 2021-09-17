@@ -49,7 +49,12 @@ eval_cutoff <- function (x, fdr_threshold) {
 #'   cutoff for VarSplic must be the third element of e_vals.
 #'
 #' @return A \code{data.table} with the rows removed that will produce an FDR
-#'   below the given threshold at the gene level.
+#'   below the given threshold at the gene level. The following variables have
+#'   been added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   |                   | `isDecoy`                  |
 #'
 #' @importFrom magrittr %>%
 #'

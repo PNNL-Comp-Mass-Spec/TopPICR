@@ -19,7 +19,11 @@ cutoff for VarSplic must be the third element of e_vals.}
 }
 \value{
 A \code{data.table} with the rows removed that will produce an FDR
-below the given threshold at the gene level.
+below the given threshold at the gene level. The following variables have
+been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+    \tab \code{isDecoy} \cr
+}
 }
 \description{
 The \code{control_fdr()} function filters the data by E-value for each
