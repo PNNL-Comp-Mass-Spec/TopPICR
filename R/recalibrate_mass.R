@@ -1,27 +1,30 @@
 #' Recalibrate the mass
 #'
-#' ...
+#' Calibrates the mass to a reference data set and calculates the error between
+#' each data set and the reference data set in parts per million (ppm). The
+#' median absolute deviation (MAD) of the ppm error is also calculated.
 #'
-#' @param x The data frame that was used as the input to the align_rt function.
-#'   This data frame is required because the align_rt function deletes columns
-#'   that are needed in this function and other downstream functions.
+#' @param x The \code{data.table} output from the \code{align_rt} function.
 #'
-#' @param x_align A data frame output from the \code{align_rt} function.
+#' @param ref_ds A character string specifying the name of the reference data
+#'   set.
 #'
-#' @param ref_ds A character string specifying the reference data set.
-#'
-#' @return ...
+#' @return A list with three elements. The first element is the data matrix with
+#'   the recalibrated mass. The second element is the MAD of the error in mass
+#'   between the reference and non-reference data sets. This is reported in ppm.
+#'   The third element is the MAD of the retention time error between the
+#'   reference data set and all other data sets.
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-recalibrate_mass <- function (x, x_align, ref_ds) {
+recalibrate_mass <- function (x, ref_ds) {
 
   # Compute the robust median of the precursor mass within Gene, Dataset, and
   # Proteoform. This variable will be used to calculate the error (in ppm)
   # between the reference and all other data sets.
-  x <- x %>%
+  x_abridged <- x %>%
     dplyr::select(c(Dataset, Proteoform, Gene,
                     `Precursor mass`, `Adjusted precursor mass`)) %>%
     dplyr::group_by(Dataset, Proteoform, Gene) %>%
@@ -30,9 +33,9 @@ recalibrate_mass <- function (x, x_align, ref_ds) {
 
   # Combine the data frames with the robust median mass and the aligned
   # retention times.
-  x_align <- x_align %>%
+  x_align <- x %>%
     dplyr::ungroup() %>%
-    dplyr::inner_join(x)
+    dplyr::inner_join(x_abridged)
 
   # Extract the reference data set.
   x_ref <- x_align %>%
@@ -68,7 +71,7 @@ recalibrate_mass <- function (x, x_align, ref_ds) {
 
 }
 
-# x_47 auxiliary functions -----------------------------------------------------
+# recalibrate_mass auxiliary functions -----------------------------------------
 
 # mass: A vector of masses extracted from the data matrix by the group_by
 # function.

@@ -4,20 +4,23 @@
 \alias{recalibrate_mass}
 \title{Recalibrate the mass}
 \usage{
-recalibrate_mass(x, x_align, ref_ds)
+recalibrate_mass(x, ref_ds)
 }
 \arguments{
-\item{x}{The data frame that was used as the input to the align_rt function.
-This data frame is required because the align_rt function deletes columns
-that are needed in this function and other downstream functions.}
+\item{x}{The \code{data.table} output from the \code{align_rt} function.}
 
-\item{x_align}{A data frame output from the \code{align_rt} function.}
-
-\item{ref_ds}{A character string specifying the reference data set.}
+\item{ref_ds}{A character string specifying the name of the reference data
+set.}
 }
 \value{
-...
+A list with three elements. The first element is the data matrix with
+the recalibrated mass. The second element is the MAD of the error in mass
+between the reference and non-reference data sets. This is reported in ppm.
+The third element is the MAD of the retention time error between the
+reference data set and all other data sets.
 }
 \description{
-...
+Calibrates the mass to a reference data set and calculates the error between
+each data set and the reference data set in parts per million (ppm). The
+median absolute deviation (MAD) of the ppm error is also calculated.
 }
