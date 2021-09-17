@@ -1,124 +1,183 @@
-#' ...
+# align_rt preliminary functions -----------------------------------------------
+
+#' Find reference data set
 #'
-#' ...
+#' \code{find_ref_ds} finds the data set that has the highest number of unique
+#' proteoforms. This data set will be used as the reference data set when
+#' aligning retention times and recalibrating the mass.
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{infer_pf} function.
 #'
-#' @param ref_ds A character string specifying the reference data set.
-#'
-#' @param ... Arguments for the \code{\link[stats]{loess}} function.
-#'
-#' @return ...
+#' @return A character vector containing the name of the reference data set. The
+#'   reference data set is the one that has the highest number of unique
+#'   \code{Proteoforms}.
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-align_rt <- function (x, ref_ds, ...) {
+find_ref_ds <- function (x) {
 
-  # Find the apex or peak of the retention time.
-  x_peak <- x %>%
-    dplyr::group_by(Dataset, Proteoform) %>%
-    # Calculate a retention time that is representative of each proteoform for
-    # each Dataset.
-    dplyr::summarize(RTest = find_peak(`P-value`, RTmin)) %>%
-    dplyr::ungroup()
+  # Group the data by data set and count the number of unique proteoforms for
+  # each data set. Select the data set that has the highest number of unique
+  # proteoforms.
+  ref_ds <- x %>%
+    dplyr::group_by(Dataset) %>%
+    dplyr::summarize(n_pfs = dplyr::n_distinct(Proteoform)) %>%
+    dplyr::slice_max(n_pfs) %>%
+    dplyr::pull(Dataset)
+
+}
+
+#' Use \code{loess} to create a model between data sets
+#'
+#' Run the \code{\link[stats]{loess}} function using the values from the
+#' \code{Feature apex} variable between the reference data set and all other
+#' data sets.
+#'
+#' @param x A \code{data.table} output from the \code{infer_pf} function.
+#'
+#' @param ref_ds A character string specifying the reference data set.
+#'
+#' @param ... Arguments for the \code{\link[stats]{loess}} function.
+#'
+#' @return A list containing the loess model between each data set and the
+#'   reference data set.
+#'
+#' @importFrom magrittr %>%
+#'
+#' @export
+#'
+form_model <- function (x, ref_ds, ...) {
 
   # Create a data frame for the reference data set. This will be used to match
   # Proteoforms between the reference data set and every other data set in the
-  # input data frame.
-  x_ref <- x_peak %>%
-    dplyr::filter(Dataset == ref_ds)
+  # input data frame. Only the distinct values of `Feature intensity`, `Feature
+  # apex`, and Proteoform are kept. Then filter (keep) the rows with the maximum
+  # feature intensity for each proteoform. This needs to be done to ensure there
+  # is only one retention time (`Feature apex`) for each proteoform. If there
+  # are multiple retention time values per proteoform the loess function will
+  # not run.
+  x_ref <- x %>%
+    dplyr::filter(Dataset == ref_ds) %>%
+    dplyr::distinct(`Feature intensity`, `Feature apex`, Proteoform) %>%
+    dplyr::group_by(Proteoform) %>%
+    dplyr::slice_max(`Feature intensity`)
+
+  # Create a vector of unique data set names. This will be used to create the
+  # models between the reference and every other data set.
+  ds <- unique(x$Dataset)
+
+  x_model <- vector(mode = "list",
+                    length = length(ds))
+
+  # Loop through each data set and create a loess model between the current and
+  # and reference data sets.
+  for (e in 1:length(ds)) {
+
+    # Filter the data to the rows corresponding to the current data set. See the
+    # explanation above for explanation of why we use distinct, group_by, and
+    # slice_max.
+    x_cur <- x %>%
+      dplyr::filter(Dataset == ds[[e]]) %>%
+      dplyr::distinct(`Feature intensity`, `Feature apex`, Proteoform) %>%
+      dplyr::group_by(Proteoform) %>%
+      dplyr::slice_max(`Feature intensity`)
+
+    # Find Proteoforms that occur in both the reference and current data sets.
+    both <- dplyr::intersect(x_ref$Proteoform,
+                             x_cur$Proteoform)
+
+    # Extract the indices where the intersecting Proteoforms occur in both the
+    # reference data set and the current data set.
+    idx_ref <- which(x_ref$Proteoform %in% both)
+    idx_cur <- which(x_cur$Proteoform %in% both)
+
+    # Convert `Feature apex` to minutes because the retention time was also
+    # converted to minutes.
+    fa_ref <- x_ref$`Feature apex`[idx_ref] / 60
+    fa_cur <- x_cur$`Feature apex`[idx_cur] / 60
+
+    # Run loess on the retention times from the reference and current data sets.
+    model_loess <- stats::loess(
+      fa_ref ~ fa_cur,
+      ...
+    )
+
+    x_model[[e]] <- model_loess
+
+  }
+
+  # Name the list with the Dataset names so the models can be applied correctly
+  # when aligning the retention times.
+  names(x_model) <- ds
+
+  return (x_model)
+
+}
+
+# align_rt main function -------------------------------------------------------
+
+#' Align retention times to a reference data set
+#'
+#' Aligns all retention times to a reference data set using the times from the
+#' \code{Feature apex} column. The \code{loess} function from the \code{stats}
+#' package is used for the alignment.
+#'
+#' @param x A \code{data.table} output from the \code{infer_pf} function.
+#'
+#' @param model A list containing the model output by the \code{loess} function.
+#'   The elements of this list are the models between the reference data set and
+#'   every other data set.
+#'
+#' @return A \code{data.table} with the retention times aligned to a reference
+#'   data set. The following variables have been added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   | `RTalign`         |                            |
+#'
+#' @importFrom magrittr %>%
+#'
+#' @export
+#'
+align_rt <- function (x, model) {
+
+  # Check if the data sets in x are also in the model list.
+  if (!setequal(unique(x$Dataset), names(model))) {
+
+    stop (paste("The data sets present in x and model do not match."))
+
+  }
 
   # Align the retention times to the reference data set.
-  x_align <- x_peak %>%
+  x_align <- x %>%
     dplyr::group_by(Dataset) %>%
     # Align retention times by Dataset to a reference Dataset.
-    dplyr::mutate(RTalign = alignment(rt = RTest,
-                                      pf = Proteoform,
-                                      x_ref = x_ref,
-                                      # The dots are for the loess function.
-                                      ...)) %>%
+    dplyr::mutate(RTalign = alignment(rt = RTmin,
+                                      ds = Dataset,
+                                      mdl = model)) %>%
     dplyr::ungroup()
-
 
   return (x_align)
 
 }
 
-# x_42 auxiliary functions -----------------------------------------------------
-
-# Function for computing the median retention time depending on the number of
-# observations for a given data set.  This function works within the mutate
-# function.
-find_peak <- function (pvalue, rtmin) {
-
-  # Check for the number of p-values.
-  if (length(pvalue) > 4) {
-
-    # Order the rtmin values from smallest to largest. If there are more than 20
-    # p-values only keep the first 20.
-    series <- order(rtmin)[1:min(20, length(pvalue))]
-
-    # Reorder the pvalue and rtmin vectors according to the order from above.
-    pvalue <- pvalue[series]
-    rtmin <- rtmin[series]
-
-    # Find the p-value corresponding to the 25th percentile.
-    quant <- stats::quantile(pvalue, 0.25)
-
-    # Extract the indices of the p-values that are less than quant.
-    idx <- which(pvalue <= quant)
-
-    # Calculate the median RTmin for the smallest 25th percentile of p-values.
-    rtmed <- stats::median(rtmin[idx])
-
-    # Runs if the number of p-values is between 2 and 4.
-  } else if (length(pvalue) > 1) {
-
-    # Extract the indices of the two smallest p-values.
-    idx <- order(pvalue)[1:2]
-
-    # Calculate the median RTmin for the two smallest p-values.
-    rtmed <- stats::median(rtmin[idx])
-
-    # Runs if the number of p-values is equal to 1.
-  } else {
-
-    # Return the only RTmin value present in the data frame.
-    rtmed <- rtmin[[1]]
-
-  }
-
-  # Return the median retention time.
-  return (rtmed)
-
-}
+# align_rt auxiliary functions -------------------------------------------------
 
 # Function for aligning retention times. This function works within the mutate
 # function.
 # rt: A vector of retention times extracted from the data matrix by the group_by
 # function.
-# pf: A vector of proteoforms extracted from the data matrix by the group_by
-# function.
-# x: the original data matrix (without any groupings).
-# ref_ds: A character string. This is the name of the reference data set.
-alignment <- function (rt, pf, x_ref, ...) {
+# ds: A vector of data set names. This vector should only contain one data set
+# name (repeated for the number of rows for the current data set).
+# mdl: A list of loess models corresponding to each data set.
+alignment <- function (rt, ds, mdl) {
 
-  # Find the Proteoforms that occur in both the reference and current data sets.
-  # The current data set comes from the group_by function (it will loop through
-  # every unique data set in the data matrix).
-  both <- dplyr::intersect(x_ref$Proteoform, pf)
-
-  # Extract the indices where the intersecting Proteoforms occur in both the
-  # reference data set and the current data set.
-  idx_ref <- which(x_ref$Proteoform %in% both)
-  idx_cur <- which(pf %in% both)
-
-  # Run loess on the retention times from the reference and current data sets.
-  model_loess <- stats::loess(x_ref$RTest[idx_ref] ~ rt[idx_cur], ...)
+  # Nab the model that corresponds to the current data set.
+  idx <- which(names(mdl) == unique(ds))
 
   # Return the predicted retention times.
-  return (stats::predict(object = model_loess, newdata = rt))
+  return (stats::predict(object = mdl[[idx]], newdata = rt))
 
 }

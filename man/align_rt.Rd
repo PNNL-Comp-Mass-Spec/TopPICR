@@ -2,20 +2,26 @@
 % Please edit documentation in R/align_rt.R
 \name{align_rt}
 \alias{align_rt}
-\title{...}
+\title{Align retention times to a reference data set}
 \usage{
-align_rt(x, ref_ds, ...)
+align_rt(x, model)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{infer_pf} function.}
 
-\item{ref_ds}{A character string specifying the reference data set.}
-
-\item{...}{Arguments for the \code{\link[stats]{loess}} function.}
+\item{model}{A list containing the model output by the \code{loess} function.
+The elements of this list are the models between the reference data set and
+every other data set.}
 }
 \value{
-...
+A \code{data.table} with the retention times aligned to a reference
+data set. The following variables have been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{RTalign} \tab  \cr
+}
 }
 \description{
-...
+Aligns all retention times to a reference data set using the times from the
+\code{Feature apex} column. The \code{loess} function from the \code{stats}
+package is used for the alignment.
 }
