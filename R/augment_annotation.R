@@ -82,12 +82,13 @@ augment_annotation <- function (x,
     dplyr::group_by(cleanSeq, AnnType2) %>%
     dplyr::add_count(name = "AccMap") %>%
     dplyr::ungroup() %>%
-    dplyr::select(-AnnType2, -accession)
+    dplyr::select(-AnnType2)
 
   x_norm <- dplyr::inner_join(x_norm, augmented) %>%
     dplyr::mutate(
-      UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", `Protein accession`)
-    )
+      UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession)
+    ) %>%
+    dplyr::select(-accession)
 
   # Create the protLength, firstAA, and lastAA variables.
   acc_info <- add_acc_info(data = x_norm,
