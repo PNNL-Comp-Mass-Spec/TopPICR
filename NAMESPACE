@@ -2,6 +2,7 @@
 
 export(align_rt)
 export(augment_annotation)
+export(calc_error)
 export(choose_fi)
 export(cluster)
 export(control_fdr)
