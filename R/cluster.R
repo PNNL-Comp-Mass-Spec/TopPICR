@@ -1,50 +1,54 @@
-#' ...
+#' Cluster data based on mass and retention time
 #'
-#' ...
+#' Cluster the data using hierarchical clustering with the
+#' \code{\link[stats]{hclust}} function. The data are clustered with the
+#' normalized recalibrated mass and the normalized aligned retention times.
 #'
-#' @param x A list with three elements output from the x_47 function. The first
-#'   element is the the data matrix with the aligned retention times and
-#'   recalibrated mass. The second and third elements are the median of the ppm
-#'   and retention time errors respectively. These values are calculated by
-#'   Dataset.
+#' @param x A \code{data.table} output from the \code{recalibrate_mass}
+#'   function.
+#'
+#' @param errors A list output from the \code{calc_error} function.
 #'
 #' @param method A character string indicating what agglomeration method should
-#'   be used in the hclust function.
+#'   be used in the hclust function. See \code{\link[stats]{hclust}} for more
+#'   details.
 #'
 #' @param height An number specifying the height at which the tree created by
-#'   the hclust function should be cut.
+#'   the hclust function should be cut. See \code{\link[stats]{hclust}} for more
+#'   details.
 #'
 #' @param min_size An integer value indicating the minimum number of points a
 #'   cluster must have. All clusters with fewer members than min_size will be
 #'   reclassified as "noise" points.
 #'
-#' @return ...
+#' @return A \code{data.table} with the cluster assignment for each observation.
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-cluster <- function (x, method, height, min_size) {
+cluster <- function (x, errors, method, height, min_size) {
 
-  x_cluster <- x[[1]] %>%
+  x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
     # Remove rows corresponding to Genes with only one observation because
     # hclust will throw an error unless there are at least two observations.
     dplyr::add_count(name = "obs") %>%
     dplyr::filter(obs > 1) %>%
     dplyr::select(-obs) %>%
+    dplyr::ungroup() %>%
     # Normalize the mass according to the ppm error that was computed in the
     # x_47 function. The normalized recalibrated mass will be used for
     # clustering. This means the h argument in the cutree function will
     # correspond to the standard deviation.
     dplyr::mutate(
-      NormRecalMass = log10(RecalMass) / log10(1 + x[[2]] / 1e6)
+      NormRecalMass = log10(RecalMass) / log10(1 + errors[[2]] / 1e6)
     ) %>%
     # Normalize the aligned rt according to the rt error that was computed in
     # the x_47 function. The normalized rt will be used for clustering. This
     # means the h argument in the cutree function will correspond to the
     # standard deviation.
-    dplyr::mutate(NormRTalign = RTalign / x[[3]]) %>%
+    dplyr::mutate(NormRTalign = RTalign / errors[[3]]) %>%
     dplyr::ungroup() %>%
     dplyr::nest_by(Gene) %>%
     dplyr::mutate(
@@ -67,8 +71,6 @@ cluster <- function (x, method, height, min_size) {
     tidyr::unnest(cols = c(data, cluster))
 
   # Return the cluster data frame along with the ppm and rt errors.
-  return (list(x = x_cluster,
-               ppm_error = x[[2]],
-               rt_error = x[[3]]))
+  return (x_cluster)
 
 }

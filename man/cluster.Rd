@@ -2,30 +2,33 @@
 % Please edit documentation in R/cluster.R
 \name{cluster}
 \alias{cluster}
-\title{...}
+\title{Cluster data based on mass and retention time}
 \usage{
-cluster(x, method, height, min_size)
+cluster(x, errors, method, height, min_size)
 }
 \arguments{
-\item{x}{A list with three elements output from the x_47 function. The first
-element is the the data matrix with the aligned retention times and
-recalibrated mass. The second and third elements are the median of the ppm
-and retention time errors respectively. These values are calculated by
-Dataset.}
+\item{x}{A \code{data.table} output from the \code{recalibrate_mass}
+function.}
+
+\item{errors}{A list output from the \code{calc_error} function.}
 
 \item{method}{A character string indicating what agglomeration method should
-be used in the hclust function.}
+be used in the hclust function. See \code{\link[stats]{hclust}} for more
+details.}
 
 \item{height}{An number specifying the height at which the tree created by
-the hclust function should be cut.}
+the hclust function should be cut. See \code{\link[stats]{hclust}} for more
+details.}
 
 \item{min_size}{An integer value indicating the minimum number of points a
 cluster must have. All clusters with fewer members than min_size will be
 reclassified as "noise" points.}
 }
 \value{
-...
+A \code{data.table} with the cluster assignment for each observation.
 }
 \description{
-...
+Cluster the data using hierarchical clustering with the
+\code{\link[stats]{hclust}} function. The data are clustered with the
+normalized recalibrated mass and the normalized aligned retention times.
 }
