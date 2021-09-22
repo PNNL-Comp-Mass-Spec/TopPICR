@@ -24,7 +24,6 @@
 #'   | `mz`              | `Prsm ID`                  |
 #'   | `Gene`            | `Spectrum ID`              |
 #'   | `isDecoy`         | `Fragmentation`            |
-#'   | `RTmin`           | `Retention time`           |
 #'   | `Dataset`         | `#peaks`                   |
 #'   | `CV`              | `Proteoform ID`            |
 #'   |                   | `Feature score`            |
@@ -73,7 +72,7 @@ read_toppic <- function (file_path, file_name, ...) {
   # the top down workflow. They will be removed with dplyr::any_of. The function
   # will not throw an error if any of the variables listed are not present in
   # the data set.
-  useless <- c("Prsm ID", "Spectrum ID", "Fragmentation", "Retention time",
+  useless <- c("Prsm ID", "Spectrum ID", "Fragmentation",
                "#peaks", "Proteoform ID", "Feature score", "MIScore",
                "#variable PTMs", "#matched peaks", "#matched fragment ions",
                "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
@@ -88,7 +87,6 @@ read_toppic <- function (file_path, file_name, ...) {
       mz = (`Precursor mass` + Charge * 1.007276466621) / Charge,
       Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`),
       isDecoy = grepl("^DECOY", `Protein accession`),
-      RTmin = `Retention time` / 60,
       Dataset = stringr::str_remove(`Data file name`, "_ms2.msalign"),
       # Extract the CV information (if it exists).
       CV = stringr::str_extract(Dataset, "[mp][0-9]*CV"),

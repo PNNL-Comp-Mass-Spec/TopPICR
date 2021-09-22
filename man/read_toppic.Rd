@@ -23,7 +23,6 @@ row wise. The following variables have been added/removed:\tabular{ll}{
    \code{mz} \tab \verb{Prsm ID} \cr
    \code{Gene} \tab \verb{Spectrum ID} \cr
    \code{isDecoy} \tab \code{Fragmentation} \cr
-   \code{RTmin} \tab \verb{Retention time} \cr
    \code{Dataset} \tab \verb{#peaks} \cr
    \code{CV} \tab \verb{Proteoform ID} \cr
     \tab \verb{Feature score} \cr

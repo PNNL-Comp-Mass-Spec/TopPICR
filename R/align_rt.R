@@ -93,14 +93,9 @@ form_model <- function (x, ref_ds, ...) {
     idx_ref <- which(x_ref$Proteoform %in% both)
     idx_cur <- which(x_cur$Proteoform %in% both)
 
-    # Convert `Feature apex` to minutes because the retention time was also
-    # converted to minutes.
-    fa_ref <- x_ref$`Feature apex`[idx_ref] / 60
-    fa_cur <- x_cur$`Feature apex`[idx_cur] / 60
-
     # Run loess on the retention times from the reference and current data sets.
     model_loess <- stats::loess(
-      fa_ref ~ fa_cur,
+      x_ref$`Feature apex`[idx_ref] ~ x_cur$`Feature apex`[idx_cur],
       ...
     )
 
@@ -154,7 +149,7 @@ align_rt <- function (x, model) {
   x_align <- x %>%
     dplyr::group_by(Dataset) %>%
     # Align retention times by Dataset to a reference Dataset.
-    dplyr::mutate(RTalign = alignment(rt = RTmin,
+    dplyr::mutate(RTalign = alignment(rt = `Retention time`,
                                       ds = Dataset,
                                       mdl = model)) %>%
     dplyr::ungroup()
