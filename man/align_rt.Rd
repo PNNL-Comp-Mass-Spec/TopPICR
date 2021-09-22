@@ -4,7 +4,7 @@
 \alias{align_rt}
 \title{Align retention times to a reference data set}
 \usage{
-align_rt(x, model)
+align_rt(x, model, var_name)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{infer_pf} function.}
@@ -12,6 +12,9 @@ align_rt(x, model)
 \item{model}{A list containing the model output by the \code{loess} function.
 The elements of this list are the models between the reference data set and
 every other data set.}
+
+\item{var_name}{A character string. The name of the retention time variable
+that will be aligned with the reference data set (e.g., \verb{Feature apex}).}
 }
 \value{
 A \code{data.table} with the retention times aligned to a reference

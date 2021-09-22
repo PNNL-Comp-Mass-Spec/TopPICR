@@ -125,6 +125,9 @@ form_model <- function (x, ref_ds, ...) {
 #'   The elements of this list are the models between the reference data set and
 #'   every other data set.
 #'
+#' @param var_name A character string. The name of the retention time variable
+#'   that will be aligned with the reference data set (e.g., `Feature apex`).
+#'
 #' @return A \code{data.table} with the retention times aligned to a reference
 #'   data set. The following variables have been added/removed:
 #'
@@ -136,7 +139,7 @@ form_model <- function (x, ref_ds, ...) {
 #'
 #' @export
 #'
-align_rt <- function (x, model) {
+align_rt <- function (x, model, var_name) {
 
   # Check if the data sets in x are also in the model list.
   if (!setequal(unique(x$Dataset), names(model))) {
@@ -149,7 +152,7 @@ align_rt <- function (x, model) {
   x_align <- x %>%
     dplyr::group_by(Dataset) %>%
     # Align retention times by Dataset to a reference Dataset.
-    dplyr::mutate(RTalign = alignment(rt = `Retention time`,
+    dplyr::mutate(RTalign = alignment(rt = !!rlang::sym(var_name),
                                       ds = Dataset,
                                       mdl = model)) %>%
     dplyr::ungroup()
