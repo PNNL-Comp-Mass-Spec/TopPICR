@@ -42,13 +42,13 @@ cluster <- function (x, errors, method, height, min_size) {
     # clustering. This means the h argument in the cutree function will
     # correspond to the standard deviation.
     dplyr::mutate(
-      NormRecalMass = log10(RecalMass) / log10(1 + errors[[2]] / 1e6)
+      NormRecalMass = log10(RecalMass) / log10(1 + errors$ppm_error / 1e6)
     ) %>%
     # Normalize the aligned rt according to the rt error that was computed in
     # the x_47 function. The normalized rt will be used for clustering. This
     # means the h argument in the cutree function will correspond to the
     # standard deviation.
-    dplyr::mutate(NormRTalign = RTalign / errors[[3]]) %>%
+    dplyr::mutate(NormRTalign = RTalign / errors$rt_error) %>%
     dplyr::ungroup() %>%
     dplyr::nest_by(Gene) %>%
     dplyr::mutate(
