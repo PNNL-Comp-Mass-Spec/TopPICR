@@ -4,17 +4,21 @@
 \alias{recalibrate_mass}
 \title{Recalibrate the mass}
 \usage{
-recalibrate_mass(x, errors)
+recalibrate_mass(x, errors, var_name = "repMass")
 }
 \arguments{
 \item{x}{The \code{data.table} output from the \code{align_rt} function.}
 
 \item{errors}{A list output from the \code{calc_error} function.}
+
+\item{var_name}{A character string. The name of the mass variable that will
+be recalibrated to the reference data set (e.g., repMass).}
 }
 \value{
 A \code{data.table} containing the recalibrated mass variable. The
 following variables were added/removed:\tabular{ll}{
    Added \tab Removed \cr
+   \code{repMass} (when var_name = "repMass") \tab  \cr
    \code{RecalMass} \tab  \cr
 }
 }

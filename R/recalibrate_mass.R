@@ -25,15 +25,20 @@
 #'
 calc_error <- function (x, ref_ds) {
 
-  # Compute the robust median of the precursor mass within Gene, Dataset, and
+  # Compute the robust median of the precursor mass within Dataset and
   # Proteoform. This variable will be used to calculate the error (in ppm)
   # between the reference and all other data sets.
   x_abridged <- x %>%
-    dplyr::select(c(Dataset, Proteoform, Gene,
-                    `Precursor mass`, `Adjusted precursor mass`)) %>%
-    dplyr::group_by(Dataset, Proteoform, Gene) %>%
-    dplyr::summarize(Mass = robust_median(mass = `Precursor mass`,
-                                          adj_mass = `Adjusted precursor mass`))
+    dplyr::select(c(Dataset, Proteoform, `Precursor mass`,
+                    `Adjusted precursor mass`)) %>%
+    dplyr::group_by(Dataset, Proteoform) %>%
+    # Calculate a representative mass (repMass) within each Dataset and
+    # Proteoform. This mass will be used to recalibrate the mass in the
+    # recalibrate_mass function.
+    dplyr::summarize(
+      repMass = robust_median(mass = `Precursor mass`,
+                           adj_mass = `Adjusted precursor mass`)
+    )
 
   # Combine the data frames with the robust median mass and the aligned
   # retention times.
@@ -44,12 +49,12 @@ calc_error <- function (x, ref_ds) {
   # Extract the reference data set.
   x_ref <- x_mass %>%
     dplyr::filter(Dataset == ref_ds) %>%
-    dplyr::select(-Dataset, -Gene)
+    dplyr::select(-Dataset)
 
   # Compute the mass and retention time errors.
   x_error <- x_mass %>%
     dplyr::group_by(Dataset) %>%
-    dplyr::summarize(ppm_rt_error(mass = Mass,
+    dplyr::summarize(ppm_rt_error(mass = repMass,
                                   rt = RTalign,
                                   pf = Proteoform,
                                   x_ref = x_ref)) %>%
@@ -66,7 +71,8 @@ calc_error <- function (x, ref_ds) {
 
   # Return the x_error data frame that contains the RecalMass variable along
   # with the ppm and retention time errors.
-  return (list(x = x_error,
+  return (list(rep_mass = dplyr::select(x_mass, Dataset, repMass),
+               ds_error = x_error,
                ppm_error = errors$ppm_error[[1]],
                rt_error = errors$rt_error[[1]]))
 
@@ -83,55 +89,53 @@ calc_error <- function (x, ref_ds) {
 #'
 #' @param errors A list output from the \code{calc_error} function.
 #'
+#' @param var_name A character string. The name of the mass variable that will
+#'   be recalibrated to the reference data set (e.g., repMass).
+#'
 #' @return A \code{data.table} containing the recalibrated mass variable. The
 #'   following variables were added/removed:
 #'
 #'   | Added             | Removed                    |
 #'   | ----------------- | -------------------------- |
+#'   | `repMass` (when var_name = "repMass") |        |
 #'   | `RecalMass`       |                            |
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-recalibrate_mass <- function (x, errors) {
+recalibrate_mass <- function (x, errors, var_name = "repMass") {
 
-  # Check to make sure the data sets in x are also in errors$x. If the data sets
-  # in each data frame are not identical the mass cannot be recalibrated. Here x
-  # is the data.table output by the align_rt function and errors$x is the
-  # data.table output by the calc_error function.
-  if (!setequal(unique(x$Dataset), unique(errors$x$Dataset))) {
+  # Check to make sure the data sets in x are also in errors$ds_error. If the
+  # data sets in each data frame are not identical the mass cannot be
+  # recalibrated. Here x is the data.table output by the align_rt function and
+  # errors$ds_error is the data.table output by the calc_error function.
+  if (!setequal(unique(x$Dataset), unique(errors$ds_error$Dataset))) {
 
-    stop (paste("The data sets present in x and errors$x do not match."))
+    stop (paste("The data sets present in x and errors$ds_error do not match."))
 
   }
 
-  #!#!#!#!#!#!#! START #!#!#!#!#!#!#!
+  # Check if the variable that will be recalibrated is repMass. If it is the
+  # repMass variable must be added to x.
+  if (var_name == "repMass") {
 
-  # Test code to make sure the changes produce the same output as the original
-  # function.
+    # Add the representative mass variable (repMass) to the data matrix. This
+    # variable was created in the calc_error function and is the default mass
+    # used to recalibrate the mass.
+    x$repMass <- errors$rep_mass$repMass
 
-  x_abridged <- x %>%
-    dplyr::group_by(Dataset, Proteoform, Gene) %>%
-    dplyr::summarize(
-      Mass = robust_median(mass = `Precursor mass`,
-                           adj_mass = `Adjusted precursor mass`)
-    )
+  }
 
-  x2 <- x %>%
-    dplyr::ungroup() %>%
-    dplyr::inner_join(x_abridged)
-
-  # NOTE: When this code is removed the variables in the calls to the inner_join
-  # and mutate functions will need to be changed.
-
-  #!#!#!#!#!#!#! END #!#!#!#!#!#!#!
-
-  # Recalibrate the mass.
-  x_recal <- dplyr::inner_join(x = x2,
-                               y = errors$x,
-                               by = "Dataset") %>%
-    dplyr::mutate(RecalMass = Mass * (1 - ppm_median / 1e6)) %>%
+  # Add the ppm_median variable to the data. This variable will be used to carry
+  # out the actual recalibration.
+  x_recal <-  dplyr::inner_join(x = x,
+                                y = errors$ds_error,
+                                by = "Dataset") %>%
+    # Recalibrate the mass.
+    dplyr::mutate(
+      RecalMass = !!rlang::sym(var_name) * (1 - ppm_median / 1e6)
+    ) %>%
     # Remove intermediate variables used to recalibrate the mass. These
     # variables are in the output of the calc_error function and can be accessed
     # there if they are needed.
@@ -154,7 +158,7 @@ robust_median <- function (mass, adj_mass) {
   # Calculate the absolute difference between the Precursor mass (mass) and the
   # Adjusted precursor mass (adj_mass). This vector will be used to determine
   # which Precursor masses will be used to calculate the representative mass for
-  # the Dataset, Proteoform, Gene combination.
+  # the Dataset and Proteoform combination.
   diffs <- abs(adj_mass - mass)
 
   # Only keep mass (Precursor mass) values that are within 0.5 Dalton of
@@ -201,14 +205,14 @@ robust_median <- function (mass, adj_mass) {
 ppm_rt_error <- function (mass, rt, pf, x_ref) {
 
   # Combine the reference data set along with the data subsetted by the group_by
-  # function by Gene and Proteoform.
-  error <- dplyr::inner_join(x = x_ref[, c("Mass", "RTalign", "Proteoform")],
-                             y = tibble::tibble(Mass = mass,
+  # function by Dataset.
+  error <- dplyr::inner_join(x = x_ref[, c("repMass", "RTalign", "Proteoform")],
+                             y = tibble::tibble(repMass = mass,
                                                 RTalign = rt,
                                                 Proteoform = pf),
                              by = "Proteoform") %>%
     # Calculate the ppm and retention time errors.
-    dplyr::mutate(ppm_error = 1e6 * (Mass.y - Mass.x) / Mass.x,
+    dplyr::mutate(ppm_error = 1e6 * (repMass.y - repMass.x) / repMass.x,
                   rt_error = RTalign.y - RTalign.x)
 
   # Only keep ppm values between plus/minus 20 for computing the median. The
