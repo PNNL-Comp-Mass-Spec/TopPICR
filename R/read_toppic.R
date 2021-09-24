@@ -27,6 +27,8 @@
 #'   | `Dataset`         | `#peaks`                   |
 #'   | `CV`              | `Proteoform ID`            |
 #'   |                   | `Feature score`            |
+#'   |                   | `First residue`            |
+#'   |                   | `Last residue`             |
 #'   |                   | `MIScore`                  |
 #'   |                   | `#variable PTMs`           |
 #'   |                   | `#matched peaks`           |
@@ -77,7 +79,7 @@ read_toppic <- function (file_path, file_name, ...) {
                "#variable PTMs", "#matched peaks", "#matched fragment ions",
                "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
                "Last residue", "Spectrum-level Q-value",
-               "Proteoform-level Q-value")
+               "Proteoform-level Q-value", "First residue", "Last residue")
 
   x <- x %>%
     # Filter data based on protein accession and description variables.
