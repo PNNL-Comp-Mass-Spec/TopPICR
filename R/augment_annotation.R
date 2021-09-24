@@ -158,10 +158,14 @@ map_peptides_to_fasta <- function (peptides,
 
   # Add the pipe and the find_matching_accessions function so they can be used
   # in parallel.
-  `%>%` <- magrittr::`%>%`
-  parallel::clusterExport(cl, "%>%", envir = 1)
-  find_matching_accessions <- TopPICR:::find_matching_accessions
-  parallel::clusterExport(cl, "find_matching_accessions", envir = 1)
+  parallel::clusterCall(cl, assign,
+                        "find_matching_accessions",
+                        find_matching_accessions,
+                        envir = .GlobalEnv)
+  parallel::clusterCall(cl, assign,
+                        "%>%",
+                        magrittr::`%>%`,
+                        envir = .GlobalEnv)
 
   fasta.df.split <- lapply(parallel::clusterSplit(cl, 1:nrow(fasta.df)),
                            function(idx) {
