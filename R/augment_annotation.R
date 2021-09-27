@@ -84,9 +84,17 @@ augment_annotation <- function (x,
     dplyr::ungroup() %>%
     dplyr::select(-AnnType2)
 
+  # Add the UniProtAcc and AnnType variables using the accession variable.
   x_norm <- dplyr::inner_join(x_norm, augmented) %>%
     dplyr::mutate(
-      UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession)
+      UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession),
+      AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
+                                       accession) ~ "VarSplic",
+                                 grepl("^(DECOY_)?tr.*",
+                                       accession) ~ "TrEMBL",
+                                 grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
+                                       accession) ~ "SwissProt",
+                                 TRUE ~ NA_character_)
     ) %>%
     dplyr::select(-accession)
 
@@ -102,13 +110,6 @@ augment_annotation <- function (x,
   # acid sequence matches the reference amino acid sequence) to x_norm.
   x_norm <- x_norm %>%
     dplyr::mutate(
-      AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
-                                       `Protein accession`) ~ "VarSplic",
-                                 grepl("^(DECOY_)?tr.*",
-                                       `Protein accession`) ~ "TrEMBL",
-                                 grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
-                                       `Protein accession`) ~ "SwissProt",
-                                 TRUE ~ NA_character_),
       percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
     )
 
