@@ -197,6 +197,10 @@ find_matching_accessions <- function (peptides, fasta.df) {
   })
 }
 
+#'
+#' @importFrom foreach `%dopar%`
+#'
+
 add_acc_info <- function (data, fst) {
 
   # Only keep the unique combinations of UniProtAcc and cleanSeq to speed up the
@@ -204,14 +208,14 @@ add_acc_info <- function (data, fst) {
   uniqueD <- data %>%
     dplyr::distinct(UniProtAcc, cleanSeq)
 
-  # Initialize vectors to full length.
-  prot_len <- vector(length = dim(uniqueD)[[1]])
-  first_aa <- vector(length = dim(uniqueD)[[1]])
-  last_aa <- vector(length = dim(uniqueD)[[1]])
+  # Prepare to run in parallel.
+  cores <- parallel::detectCores() - 1
+  cl <- parallel::makeCluster(cores)
+  doParallel::registerDoParallel(cl)
 
   # Loop through each accession and observed sequence to create the protein
   # length, first amino acid position, and last amino acid position variables.
-  for (e in 1:length(prot_len)) {
+  posi <- foreach::foreach(e = 1:dim(uniqueD)[[1]]) %dopar% {
 
     # Find the current accession in the fasta file.
     idx <- grep(uniqueD$UniProtAcc[[e]], names(fst))[[1]]
@@ -224,19 +228,32 @@ add_acc_info <- function (data, fst) {
     # sequence.
     fl <- stringr::str_locate(real, uniqueD$cleanSeq[[e]])
 
-    # Assign computed values to their corresponding vector.
-    prot_len[[e]] <- BiocGenerics::width(fst[idx])
-    first_aa[[e]] <- fl[[1]]
-    last_aa[[e]] <- fl[[2]]
+    # Assign computed values to a data frame.
+    positions <- data.frame(
+      prot_len = BiocGenerics::width(fst[idx]),
+      first_aa = fl[[1]],
+      last_aa = fl[[2]]
+    )
+
+    # Using the foreach function with %dopar% will assign the last element
+    # within the curly brackets to the object when foreach is called. In this
+    # case positions will be assigned to the eth element of posi.
+    positions
 
   }
+
+  parallel::stopCluster(cl)
+
+  # Combine the list containing prot_len, first_aa, and last_aa into a
+  # data.table.
+  posi <- data.table::rbindlist(posi)
 
   # Return the first and last indices of the amino acid sequence and the
   # observed protein length.
   return (data.frame(UniProtAcc = uniqueD$UniProtAcc,
                      cleanSeq = uniqueD$cleanSeq,
-                     protLength = prot_len,
-                     firstAA = first_aa,
-                     lastAA = last_aa))
+                     protLength = posi$prot_len,
+                     firstAA = posi$first_aa,
+                     lastAA = posi$last_aa))
 
 }
