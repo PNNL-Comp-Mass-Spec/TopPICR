@@ -62,7 +62,10 @@ form_model <- function (x, ref_ds, ...) {
     dplyr::filter(Dataset == ref_ds) %>%
     dplyr::distinct(`Feature intensity`, `Feature apex`, Proteoform) %>%
     dplyr::group_by(Proteoform) %>%
-    dplyr::slice_max(`Feature intensity`)
+    dplyr::slice_max(`Feature intensity`) %>%
+    # Remove rows where the max `Feature intensity` appears in more than one row
+    # by selecting the min `Feature apex` value.
+    dplyr::slice_min(`Feature apex`)
 
   # Create a vector of unique data set names. This will be used to create the
   # models between the reference and every other data set.
@@ -82,7 +85,10 @@ form_model <- function (x, ref_ds, ...) {
       dplyr::filter(Dataset == ds[[e]]) %>%
       dplyr::distinct(`Feature intensity`, `Feature apex`, Proteoform) %>%
       dplyr::group_by(Proteoform) %>%
-      dplyr::slice_max(`Feature intensity`)
+      dplyr::slice_max(`Feature intensity`) %>%
+      # Remove rows where the max `Feature intensity` appears in more than one
+      # row by selecting the min `Feature apex` value.
+      dplyr::slice_min(`Feature apex`)
 
     # Find Proteoforms that occur in both the reference and current data sets.
     both <- dplyr::intersect(x_ref$Proteoform,
