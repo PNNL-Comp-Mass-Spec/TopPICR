@@ -29,6 +29,10 @@
 #'
 cluster <- function (x, errors, method, height, min_size) {
 
+  # Remove elements from errors because some could be very large.
+  errors$rep_mass <- NULL # Very large and not needed. Remove!
+  errors$ds_error <- NULL # Not so large but not needed either.
+
   x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
     # Remove rows corresponding to Genes with only one observation because
@@ -52,12 +56,16 @@ cluster <- function (x, errors, method, height, min_size) {
     dplyr::ungroup() %>%
     dplyr::nest_by(Gene) %>%
     dplyr::mutate(
-      hcluster = list(stats::hclust(stats::dist(dplyr::select(data,
-                                                              NormRTalign,
-                                                              NormRecalMass)),
-                                    method = method))
+      cluster = list(
+        stats::cutree(
+          stats::hclust(stats::dist(dplyr::select(data,
+                                                  NormRTalign,
+                                                  NormRecalMass)),
+                        method = method),
+          h = height
+        )
+      )
     ) %>%
-    dplyr::mutate(cluster = list(stats::cutree(hcluster, h = height))) %>%
     # Find all clusters that have fewer than min_size members. In the next step
     # these points will be reclassified as "noise" points.
     dplyr::mutate(noise = list(tibble::tibble(clust = cluster) %>%
@@ -70,7 +78,7 @@ cluster <- function (x, errors, method, height, min_size) {
     dplyr::select(Gene, data, cluster) %>%
     tidyr::unnest(cols = c(data, cluster))
 
-  # Return the cluster data frame along with the ppm and rt errors.
+  # Return the cluster data frame.
   return (x_cluster)
 
 }
