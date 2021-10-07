@@ -28,7 +28,6 @@ row wise. The following variables have been added/removed:\tabular{ll}{
     \tab \verb{Feature score} \cr
     \tab \verb{First residue} \cr
     \tab \verb{Last residue} \cr
-    \tab \code{MIScore} \cr
     \tab \verb{#variable PTMs} \cr
     \tab \verb{#matched peaks} \cr
     \tab \verb{#matched fragment ions} \cr

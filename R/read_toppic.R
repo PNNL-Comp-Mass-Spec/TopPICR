@@ -29,7 +29,6 @@
 #'   |                   | `Feature score`            |
 #'   |                   | `First residue`            |
 #'   |                   | `Last residue`             |
-#'   |                   | `MIScore`                  |
 #'   |                   | `#variable PTMs`           |
 #'   |                   | `#matched peaks`           |
 #'   |                   | `#matched fragment ions`   |
@@ -75,7 +74,7 @@ read_toppic <- function (file_path, file_name, ...) {
   # will not throw an error if any of the variables listed are not present in
   # the data set.
   useless <- c("Prsm ID", "Spectrum ID", "Fragmentation",
-               "#peaks", "Proteoform ID", "Feature score", "MIScore",
+               "#peaks", "Proteoform ID", "Feature score",
                "#variable PTMs", "#matched peaks", "#matched fragment ions",
                "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
                "Last residue", "Spectrum-level Q-value",
