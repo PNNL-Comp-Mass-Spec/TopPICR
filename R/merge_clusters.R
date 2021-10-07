@@ -1,54 +1,77 @@
-#' Merge clusters using at mass/retention time envelope
+#' Merge clusters using a mass/retention time envelope
 #'
-#' ...
+#' Merges points with clusters based on their mass and retention time. Starting
+#' with the largest cluster, each point is compared to a mass/retention time
+#' envelope around the centroid of the cluster. If a point falls within this
+#' envelope the point is merged with the cluster. This process is repeated for
+#' each cluster (except the noise cluster).
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{cluster} function.
 #'
-#' @param min_size ...
+#' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param ppm_cutoff ...
+#' @param min_size An integer value indicating the minimum number of points a
+#'   cluster must have. All clusters with fewer members than min_size will be
+#'   reclassified as "noise" points.
 #'
-#' @param ppm_range ...
+#' @param ppm_cutoff The threshold used to determine if a point is close enough
+#'   in mass to be merged with a new cluster.
 #'
-#' @param rt_range ...
+#' @param n_Da The number of Daltons (multiplied by the difference in mass
+#'   between Carbon 12 and Carbon 13) to use when creating the mass portion of
+#'   the mass/retention time envelope.
 #'
-#' @return ...
+#' @param n_rt_sd The number of standard deviations to use when creating the
+#'   retention time portion of the mass/retention time envelope.
+#'
+#' @return A \code{data.table} with like clusters combined if the points in the
+#'   clusters fall within the mass/retention time envelope of the larger
+#'   cluster. The following variables have been added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   | `cluster_new`     |                            |
 #'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-merge_clusters <- function (x, min_size, ppm_cutoff, ppm_range, rt_range) {
+merge_clusters <- function (x, errors, min_size, ppm_cutoff,
+                            n_Da, n_rt_sd) {
 
-  x_cluster <- x[[1]] %>%
+  # Remove elements from errors because some could be very large.
+  errors$rep_mass <- NULL # Very large and not needed. Remove!
+  errors$ds_error <- NULL # Not so large but not needed either.
+
+  x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
     dplyr::mutate(
       cluster_new = merge_mrt(x = .,
                               gene_name = unique(Gene),
-                              rt_error = x[[3]],
+                              rt_error = errors$rt_error,
                               ppm_cutoff = ppm_cutoff,
-                              ppm_range = ppm_range,
-                              rt_range = rt_range)
+                              n_Da = n_Da,
+                              n_rt_sd = n_rt_sd)
     )
 
-  # Find indices of all rows with a cluster size smaller than 10. These rows
-  # will be changed to 0 (the noise cluster).
+  # Find indices of all rows with a cluster size smaller than min_size. These
+  # rows will be changed to 0 (the noise cluster).
   noise <- x_cluster %>%
     dplyr::group_by(Gene, cluster_new) %>%
     # Create a variable where TRUE if the number of points in a cluster is less
-    # than 10 and FALSE if number of points is 10 or more.
+    # than min_size and FALSE if number of points is min_size or more.
     dplyr::mutate(noise = dplyr::n() < min_size) %>%
     dplyr::pull(noise)
 
-  # Change the cluster membership for all clusters with fewer than 10 members to
-  # 0 (the noise cluster).
+  # Change the cluster membership for all clusters with fewer than min_size
+  # members to 0 (the noise cluster).
   x_cluster[noise, "cluster_new"] <- 0
 
   return (x_cluster)
 
 }
 
-# x_53 auxiliary functions -----------------------------------------------------
+# merge_clusters auxiliary functions -------------------------------------------
 
 # The correct cluster function determines if a point outside a cluster should be
 # combined with the given cluster based on the distance in ppm between the
@@ -56,10 +79,10 @@ merge_clusters <- function (x, min_size, ppm_cutoff, ppm_range, rt_range) {
 # considers points within a mass/retention time envelope around a given cluster.
 correction <- function (med_mass, min_rt, max_rt, clstr,
                         mass, rt, top_clstr, rt_error,
-                        ppm_cutoff, ppm_range, rt_range) {
+                        ppm_cutoff, n_Da, n_rt_sd) {
 
-  cutoff_mass <- ppm_range * 1.0033548378
-  cutoff_rt <- rt_range * rt_error
+  cutoff_mass <- n_Da * 1.0033548378
+  cutoff_rt <- n_rt_sd * rt_error
 
   # Find indices that fall within mass and rt bounds.
   idx_mass <- which(mass < med_mass + cutoff_mass &
@@ -113,7 +136,7 @@ correction <- function (med_mass, min_rt, max_rt, clstr,
 # 7. For efficiency, remove the points belonging to the most abundant cluster
 # 8. Repeat steps 3-7 until all clusters have been iterated through
 merge_mrt <- function (x, gene_name, rt_error, ppm_cutoff,
-                       ppm_range, rt_range) {
+                       n_Da, n_rt_sd) {
 
   # Extract all rows corresponding to a given gene.
   x_gn_clstr <- x %>%
@@ -194,8 +217,8 @@ merge_mrt <- function (x, gene_name, rt_error, ppm_cutoff,
                                top_clstr = top_cluster,
                                rt_error = rt_error,
                                ppm_cutoff = ppm_cutoff,
-                               ppm_range = ppm_range,
-                               rt_range = rt_range)
+                               n_Da = n_Da,
+                               n_rt_sd = n_rt_sd)
         )
 
     }
