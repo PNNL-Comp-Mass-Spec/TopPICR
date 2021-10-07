@@ -7,7 +7,7 @@
 #' @param x A \code{data.table} output from the \code{recalibrate_mass}
 #'   function.
 #'
-#' @param errors A list output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function.
 #'
 #' @param method A character string indicating what agglomeration method should
 #'   be used in the hclust function. See \code{\link[stats]{hclust}} for more
@@ -22,6 +22,11 @@
 #'   reclassified as "noise" points.
 #'
 #' @return A \code{data.table} with the cluster assignment for each observation.
+#'   The following variables have been added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   | `cluster`         |                            |
 #'
 #' @importFrom magrittr %>%
 #'
@@ -42,15 +47,15 @@ cluster <- function (x, errors, method, height, min_size) {
     dplyr::select(-obs) %>%
     dplyr::ungroup() %>%
     # Normalize the mass according to the ppm error that was computed in the
-    # x_47 function. The normalized recalibrated mass will be used for
+    # calc_error function. The normalized recalibrated mass will be used for
     # clustering. This means the h argument in the cutree function will
     # correspond to the standard deviation.
     dplyr::mutate(
       NormRecalMass = log10(RecalMass) / log10(1 + errors$ppm_error / 1e6)
     ) %>%
     # Normalize the aligned rt according to the rt error that was computed in
-    # the x_47 function. The normalized rt will be used for clustering. This
-    # means the h argument in the cutree function will correspond to the
+    # the calc_error function. The normalized rt will be used for clustering.
+    # This means the h argument in the cutree function will correspond to the
     # standard deviation.
     dplyr::mutate(NormRTalign = RTalign / errors$rt_error) %>%
     dplyr::ungroup() %>%
@@ -76,7 +81,8 @@ cluster <- function (x, errors, method, height, min_size) {
     # Convert all clusters with fewer than min_size members to cluster 0.
     dplyr::mutate(cluster = list(replace(cluster, cluster %in% noise, 0))) %>%
     dplyr::select(Gene, data, cluster) %>%
-    tidyr::unnest(cols = c(data, cluster))
+    tidyr::unnest(cols = c(data, cluster)) %>%
+    dplyr::select(-NormRecalMass, -NormRTalign)
 
   # Return the cluster data frame.
   return (x_cluster)

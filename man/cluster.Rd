@@ -10,7 +10,7 @@ cluster(x, errors, method, height, min_size)
 \item{x}{A \code{data.table} output from the \code{recalibrate_mass}
 function.}
 
-\item{errors}{A list output from the \code{calc_error} function.}
+\item{errors}{A \code{list} output from the \code{calc_error} function.}
 
 \item{method}{A character string indicating what agglomeration method should
 be used in the hclust function. See \code{\link[stats]{hclust}} for more
@@ -26,6 +26,10 @@ reclassified as "noise" points.}
 }
 \value{
 A \code{data.table} with the cluster assignment for each observation.
+The following variables have been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{cluster} \tab  \cr
+}
 }
 \description{
 Cluster the data using hierarchical clustering with the
