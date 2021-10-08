@@ -56,6 +56,8 @@ eval_cutoff <- function (x, fdr_threshold) {
 #'   | ----------------- | -------------------------- |
 #'   |                   | `isDecoy`                  |
 #'
+#' @md
+#'
 #' @importFrom magrittr %>%
 #'
 #' @export

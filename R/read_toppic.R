@@ -35,6 +35,8 @@
 #'   |                   | `Spectrum-level Q-value`   |
 #'   |                   | `Proteoform-level Q-value` |
 #'
+#' @md
+#'
 #' @export
 #'
 read_toppic <- function (file_path, file_name, ...) {

@@ -100,6 +100,8 @@ calc_error <- function (x, ref_ds) {
 #'   | `repMass` (when var_name = "repMass") |        |
 #'   | `RecalMass`       |                            |
 #'
+#' @md
+#'
 #' @importFrom magrittr %>%
 #'
 #' @export

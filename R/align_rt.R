@@ -141,6 +141,8 @@ form_model <- function (x, ref_ds, ...) {
 #'   | ----------------- | -------------------------- |
 #'   | `RTalign`         |                            |
 #'
+#' @md
+#'
 #' @importFrom magrittr %>%
 #'
 #' @export
