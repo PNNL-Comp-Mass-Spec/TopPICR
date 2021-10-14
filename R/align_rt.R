@@ -162,7 +162,8 @@ align_rt <- function (x, model, var_name) {
     # Align retention times by Dataset to a reference Dataset.
     dplyr::mutate(RTalign = alignment(rt = !!rlang::sym(var_name),
                                       ds = Dataset,
-                                      mdl = model)) %>%
+                                      mdl = model),
+                  RTalign = round(RTalign, digits = 5)) %>%
     dplyr::ungroup()
 
   return (x_align)
