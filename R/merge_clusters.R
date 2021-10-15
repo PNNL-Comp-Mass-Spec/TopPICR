@@ -10,6 +10,9 @@
 #'
 #' @param errors A \code{list} output from the \code{calc_error} function.
 #'
+#' @param repMass Logical. If TRUE the representative mass will be used when
+#'   merging clusters.
+#'
 #' @param min_size An integer value indicating the minimum number of points a
 #'   cluster must have. All clusters with fewer members than min_size will be
 #'   reclassified as "noise" points.
@@ -38,19 +41,36 @@
 #'
 #' @export
 #'
-merge_clusters <- function (x, errors, min_size, ppm_cutoff,
+merge_clusters <- function (x, errors, repMass = TRUE, min_size, ppm_cutoff,
                             n_Da, n_rt_sd) {
 
-  # Remove elements from errors because some could be very large.
-  errors$rep_mass <- NULL # Very large and not needed. Remove!
-  errors$ds_error <- NULL # Not so large but not needed either.
+  # Check if repMass is present in the x data frame.
+  if (repMass) {
+
+    # Create a variable name that points to the correct column name based on the
+    # input of the repMass argument. We will either cluster on the RecalMass or
+    # repMass variable.
+    mass <- "repMass"
+
+    if (!("repMass" %in% names(x))) {
+
+      stop ("The variable repMass is not present in x.")
+
+    }
+
+  } else {
+
+    mass <- "RecalMass"
+
+  }
 
   x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
     dplyr::mutate(
       cluster_new = merge_mrt(x = .,
+                              mass = mass,
                               gene_name = unique(Gene),
-                              rt_error = errors$rt_error,
+                              rt_error = errors$rt_sd,
                               ppm_cutoff = ppm_cutoff,
                               n_Da = n_Da,
                               n_rt_sd = n_rt_sd)
@@ -74,6 +94,128 @@ merge_clusters <- function (x, errors, min_size, ppm_cutoff,
 }
 
 # merge_clusters auxiliary functions -------------------------------------------
+
+# The merge_mrt function (merge clusters based on a Mass/Retention Time
+# envelope around each cluster) changes cluster membership based on the
+# following algorithm:
+# 1. Group the x_cluster data frame by gene
+# 2. Find the cluster (excluding 0) with the most elements
+# 3. Compute the median/mean RecalMass or repMass for most abundant cluster
+# 4. For each other point in the graph compute the difference between the
+#    RecalMass/repMass of each point and the median/mean of the cluster.
+# 5. Calculate the value from MSnID to correct for isotopic error.
+# 6. If the value from 5 is smaller than 3 ppm convert the point to the cluster
+#    being compared to otherwise leave the cluster as is
+# 7. For efficiency, remove the points belonging to the most abundant cluster
+# 8. Repeat steps 3-7 until all clusters have been iterated through
+merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
+                       n_Da, n_rt_sd) {
+
+  # Extract all rows corresponding to a given gene.
+  x_gn_clstr <- x %>%
+    dplyr::filter(Gene == gene_name) %>%
+    dplyr::select(Gene, !!rlang::sym(mass), RTalign, cluster)
+
+  # Compute the number of unique clusters for the current gene. This will be
+  # used to determine if the algorithm to change cluster membership needs to be
+  # run. For example, if there is only one cluster for a gene then nothing needs
+  # to be done.
+  n_clstrs <- length(unique(x_gn_clstr$cluster))
+
+  # Check if there is only one cluster for the given gene. This is used to
+  # determine if the change cluster membership algorithm needs to be run.
+  if (n_clstrs == 1) {
+
+    # Return the original cluster vector because nothing needs to be done to it.
+    return (x_gn_clstr$cluster)
+
+  }
+
+  # Start the used_clusters vector at zero. This vector is used to keep track of
+  # the clusters that have been considered by the change cluster algorithm. It
+  # starts with 0 because points cannot be added to the 0 (noise) cluster based
+  # on their mass or retention time. A point can only be changed to a noise
+  # point (changed to the 0 cluster) if it belongs to a cluster with fewer than
+  # 10 points.
+  used_clusters <- c(0)
+
+  # Use mass/rt envelope and ppm to determine membership ---------------
+
+  # Loop through each cluster and correct isotopic error.
+  while (TRUE) {
+
+    # Determine most numerous cluster (excluding 0).
+    top_cluster <- x_gn_clstr %>%
+      dplyr::filter(!(cluster %in% used_clusters)) %>%
+      dplyr::group_by(cluster) %>%
+      dplyr::tally() %>%
+      dplyr::arrange(-n) %>%
+      dplyr::slice(1) %>%
+      dplyr::pull(cluster)
+
+    # Find median for mass and rt for the top cluster.
+    med_mass <- x_gn_clstr %>%
+      dplyr::filter(cluster == top_cluster) %>%
+      dplyr::summarize(
+        med_mass = stats::median(!!rlang::sym(mass), na.rm = TRUE)
+      ) %>%
+      dplyr::pull(med_mass)
+    min_rt <- x_gn_clstr %>%
+      dplyr::filter(cluster == top_cluster) %>%
+      dplyr::summarize(min_rt = min(RTalign, na.rm = TRUE)) %>%
+      dplyr::pull(min_rt)
+    max_rt <- x_gn_clstr %>%
+      dplyr::filter(cluster == top_cluster) %>%
+      dplyr::summarize(max_rt = max(RTalign, na.rm = TRUE)) %>%
+      dplyr::pull(max_rt)
+
+    used_clusters <- append(used_clusters, top_cluster)
+
+    # Find indices of x_gn_clstr that don't correspond to past clusters (keep
+    # 0).
+    idx <- which(!(x_gn_clstr$cluster %in% used_clusters[-1]))
+
+    # Check the length of idx. If it is greater than zero proceed with changing
+    # cluster membership for points within the mass/rt envelope.
+    if (length(idx) > 0) {
+
+      # Change cluster membership according to the isotopic mass.
+      x_gn_clstr[idx, ] <- x_gn_clstr %>%
+        dplyr::filter(!(cluster %in% used_clusters[-1])) %>%
+        dplyr::mutate(
+          cluster = correction(med_mass = med_mass,
+                               min_rt = min_rt,
+                               max_rt = max_rt,
+                               clstr = cluster,
+                               mass = !!rlang::sym(mass),
+                               rt = RTalign,
+                               top_clstr = top_cluster,
+                               rt_error = rt_error,
+                               ppm_cutoff = ppm_cutoff,
+                               n_Da = n_Da,
+                               n_rt_sd = n_rt_sd)
+        )
+
+    }
+
+    # Check if all clusters have been considered. It is possible that some
+    # clusters that existed before have all been assigned to new clusters. This
+    # if statement checks if the used_clusters vector is greater than or equal
+    # the current number of unique clusters because it is possible that a gene
+    # does not have any points classified as noise. If this is the case the
+    # used_clusters vector could be larger than the unique clusters because this
+    # vector always includes the 0 or noise cluster.
+    if (length(used_clusters) >= length(unique(x_gn_clstr$cluster))) {
+
+      break
+
+    }
+
+  }
+
+  return (x_gn_clstr$cluster)
+
+}
 
 # The correct cluster function determines if a point outside a cluster should be
 # combined with the given cluster based on the distance in ppm between the
@@ -121,125 +263,5 @@ correction <- function (med_mass, min_rt, max_rt, clstr,
   clstr[idx1][idx2] <- top_clstr
 
   return (clstr)
-
-}
-
-# The merge_mrt function (merge clusters based on a Mass/Retention Time
-# envelope around each cluster) changes cluster membership based on the
-# following algorithm:
-# 1. Group the x_cluster data frame by gene
-# 2. Find the cluster (excluding 0) with the most elements
-# 3. Compute the median/mean RecalMass for most abundant cluster
-# 4. For each other point in the graph compute the difference betwen the
-#    RecalMass of each point and the median/mean of the cluster.
-# 5. Calculate the value from MSnID to correct for isotopic error.
-# 6. If the value from 5 is smaller than 3 ppm convert the point to the cluster
-#    being compared to otherwise leave the cluster as is
-# 7. For efficiency, remove the points belonging to the most abundant cluster
-# 8. Repeat steps 3-7 until all clusters have been iterated through
-merge_mrt <- function (x, gene_name, rt_error, ppm_cutoff,
-                       n_Da, n_rt_sd) {
-
-  # Extract all rows corresponding to a given gene.
-  x_gn_clstr <- x %>%
-    dplyr::filter(Gene == gene_name) %>%
-    dplyr::select(Gene, RecalMass, RTalign, cluster)
-
-  # Compute the number of unique clusters for the current gene. This will be
-  # used to determine if the algorithm to change cluster membership needs to be
-  # run. For example, if there is only one cluster for a gene then nothing needs
-  # to be done.
-  n_clstrs <- length(unique(x_gn_clstr$cluster))
-
-  # Check if there is only one cluster for the given gene. This is used to
-  # determine if the change cluster membership algorithm needs to be run.
-  if (n_clstrs == 1) {
-
-    # Return the original cluster vector because nothing needs to be done to it.
-    return (x_gn_clstr$cluster)
-
-  }
-
-  # Start the used_clusters vector at zero. This vector is used to keep track of
-  # the clusters that have been considered by the change cluster algorithm. It
-  # starts with 0 because points cannot be added to the 0 (noise) cluster based
-  # on their mass or retention time. A point can only be changed to a noise
-  # point (changed to the 0 cluster) if it belongs to a cluster with fewer than
-  # 10 points.
-  used_clusters <- c(0)
-
-  # Use mass/rt envelope and ppm to determine membership ---------------
-
-  # Loop through each cluster and correct isotopic error.
-  while (TRUE) {
-
-    # Determine most numerous cluster (excluding 0).
-    top_cluster <- x_gn_clstr %>%
-      dplyr::filter(!(cluster %in% used_clusters)) %>%
-      dplyr::group_by(cluster) %>%
-      dplyr::tally() %>%
-      dplyr::arrange(-n) %>%
-      dplyr::slice(1) %>%
-      dplyr::pull(cluster)
-
-    # Find median for mass and rt for the top cluster.
-    med_mass <- x_gn_clstr %>%
-      dplyr::filter(cluster == top_cluster) %>%
-      dplyr::summarize(med_mass = stats::median(RecalMass, na.rm = TRUE)) %>%
-      dplyr::pull(med_mass)
-    min_rt <- x_gn_clstr %>%
-      dplyr::filter(cluster == top_cluster) %>%
-      dplyr::summarize(min_rt = min(RTalign, na.rm = TRUE)) %>%
-      dplyr::pull(min_rt)
-    max_rt <- x_gn_clstr %>%
-      dplyr::filter(cluster == top_cluster) %>%
-      dplyr::summarize(max_rt = max(RTalign, na.rm = TRUE)) %>%
-      dplyr::pull(max_rt)
-
-    used_clusters <- append(used_clusters, top_cluster)
-
-    # Find indices of x_gn_clstr that don't correspond to past clusters (keep
-    # 0).
-    idx <- which(!(x_gn_clstr$cluster %in% used_clusters[-1]))
-
-    # Check the length of idx. If it is greater than zero proceed with changing
-    # cluster membership for points within the mass/rt envelope.
-    if (length(idx) > 0) {
-
-      # Change cluster membership according to the isotopic mass.
-      x_gn_clstr[idx, ] <- x_gn_clstr %>%
-        dplyr::filter(!(cluster %in% used_clusters[-1])) %>%
-        dplyr::mutate(
-          cluster = correction(med_mass = med_mass,
-                               min_rt = min_rt,
-                               max_rt = max_rt,
-                               clstr = cluster,
-                               mass = RecalMass,
-                               rt = RTalign,
-                               top_clstr = top_cluster,
-                               rt_error = rt_error,
-                               ppm_cutoff = ppm_cutoff,
-                               n_Da = n_Da,
-                               n_rt_sd = n_rt_sd)
-        )
-
-    }
-
-    # Check if all clusters have been considered. It is possible that some
-    # clusters that existed before have all been assigned to new clusters. This
-    # if statement checks if the used_clusters vector is greater than or equal
-    # the current number of unique clusters because it is possible that a gene
-    # does not have any points classified as noise. If this is the case the
-    # used_clusters vector could be larger than the unique clusters because this
-    # vector always includes the 0 or noise cluster.
-    if (length(used_clusters) >= length(unique(x_gn_clstr$cluster))) {
-
-      break
-
-    }
-
-  }
-
-  return (x_gn_clstr$cluster)
 
 }

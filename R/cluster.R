@@ -9,6 +9,9 @@
 #'
 #' @param errors A \code{list} output from the \code{calc_error} function.
 #'
+#' @param repMass Logical. If TRUE the representative mass will be used when
+#'   clustering.
+#'
 #' @param method A character string indicating what agglomeration method should
 #'   be used in the hclust function. See \code{\link[stats]{hclust}} for more
 #'   details.
@@ -34,11 +37,27 @@
 #'
 #' @export
 #'
-cluster <- function (x, errors, method, height, min_size) {
+cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
 
-  # Remove elements from errors because some could be very large.
-  errors$rep_mass <- NULL # Very large and not needed. Remove!
-  errors$ds_error <- NULL # Not so large but not needed either.
+  # Check if repMass is present in the x data frame.
+  if (repMass) {
+
+    # Create a variable name that points to the correct column name based on the
+    # input of the repMass argument. We will either cluster on the RecalMass or
+    # repMass variable.
+    mass <- "repMass"
+
+    if (!("repMass" %in% names(x))) {
+
+      stop ("The variable repMass is not present in x.")
+
+    }
+
+  } else {
+
+    mass <- "RecalMass"
+
+  }
 
   x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
@@ -53,13 +72,13 @@ cluster <- function (x, errors, method, height, min_size) {
     # clustering. This means the h argument in the cutree function will
     # correspond to the standard deviation.
     dplyr::mutate(
-      NormRecalMass = log10(RecalMass) / log10(1 + errors$ppm_error / 1e6)
+      NormRecalMass = log10(!!rlang::sym(mass)) / log10(1 + errors$ppm_sd / 1e6)
     ) %>%
     # Normalize the aligned rt according to the rt error that was computed in
     # the calc_error function. The normalized rt will be used for clustering.
     # This means the h argument in the cutree function will correspond to the
     # standard deviation.
-    dplyr::mutate(NormRTalign = RTalign / errors$rt_error) %>%
+    dplyr::mutate(NormRTalign = RTalign / errors$rt_sd) %>%
     dplyr::ungroup() %>%
     dplyr::nest_by(Gene) %>%
     dplyr::mutate(
@@ -84,7 +103,8 @@ cluster <- function (x, errors, method, height, min_size) {
     dplyr::mutate(cluster = list(replace(cluster, cluster %in% noise, 0))) %>%
     dplyr::select(Gene, data, cluster) %>%
     tidyr::unnest(cols = c(data, cluster)) %>%
-    dplyr::select(-NormRecalMass, -NormRTalign)
+    dplyr::select(-NormRecalMass, -NormRTalign) %>%
+    dplyr::ungroup()
 
   # Return the cluster data frame.
   return (x_cluster)

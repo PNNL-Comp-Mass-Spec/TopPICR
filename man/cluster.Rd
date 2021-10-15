@@ -4,13 +4,16 @@
 \alias{cluster}
 \title{Cluster data based on mass and retention time}
 \usage{
-cluster(x, errors, method, height, min_size)
+cluster(x, errors, repMass = TRUE, method, height, min_size)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{recalibrate_mass}
 function.}
 
 \item{errors}{A \code{list} output from the \code{calc_error} function.}
+
+\item{repMass}{Logical. If TRUE the representative mass will be used when
+clustering.}
 
 \item{method}{A character string indicating what agglomeration method should
 be used in the hclust function. See \code{\link[stats]{hclust}} for more
