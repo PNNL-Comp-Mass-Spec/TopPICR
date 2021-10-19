@@ -60,7 +60,8 @@ impute_fi <- function(x, feature, ppm_cutoff, rt_cutoff) {
       dplyr::filter(
         abs(RTalign - centroids$meanRT[[e]]) < rt_cutoff
       ) %>%
-      dplyr::select(Dataset, Intensity, CV) %>%
+      dplyr::select(Dataset, Intensity, CV,
+                    RTalign, RecalMass) %>%
       dplyr::mutate(
         Gene = centroids$Gene[[e]],
         cluster = centroids$cluster[[e]]
