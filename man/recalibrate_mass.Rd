@@ -4,7 +4,7 @@
 \alias{recalibrate_mass}
 \title{Recalibrate the mass}
 \usage{
-recalibrate_mass(x, errors, repMass = TRUE)
+recalibrate_mass(x, errors, repMass = TRUE, feature = FALSE)
 }
 \arguments{
 \item{x}{The \code{data.table} output from the \code{align_rt} function.}

@@ -96,7 +96,7 @@ calc_error <- function (x, ref_ds) {
 #'
 #' @export
 #'
-recalibrate_mass <- function (x, errors, repMass = TRUE) {
+recalibrate_mass <- function (x, errors, repMass = TRUE, feature = FALSE) {
 
   # Check to make sure the data sets in x are also in errors$ppm_stats. If the
   # data sets in each data frame are not identical the mass cannot be
@@ -108,6 +108,16 @@ recalibrate_mass <- function (x, errors, repMass = TRUE) {
 
   }
 
+  if (feature) {
+
+    mass <- "Mass"
+
+  } else {
+
+    mass <- "Precursor mass"
+
+  }
+
   # Add the ppm_median variable to the data. This variable will be used to carry
   # out the actual recalibration.
   x_recal <-  dplyr::inner_join(x = x,
@@ -115,7 +125,7 @@ recalibrate_mass <- function (x, errors, repMass = TRUE) {
                                 by = "Dataset") %>%
     # Recalibrate the mass.
     dplyr::mutate(
-      RecalMass = `Precursor mass` * (1 - ppm_median / 1e6)
+      RecalMass = !!rlang::sym(mass) * (1 - ppm_median / 1e6)
     ) %>%
     # Remove intermediate variables used to recalibrate the mass. These
     # variables are in the output of the calc_error function and can be accessed
@@ -142,7 +152,7 @@ recalibrate_mass <- function (x, errors, repMass = TRUE) {
 
     # Combine the data frames with the robust median mass and the aligned
     # retention times.
-    x_mass <- x_recal %>%
+    x_recal <- x_recal %>%
       dplyr::ungroup() %>%
       dplyr::inner_join(x_abridged)
 
@@ -150,7 +160,7 @@ recalibrate_mass <- function (x, errors, repMass = TRUE) {
 
   # Return the x_recal data frame that contains the RecalMass and repMass (when
   # applicable) variables.
-  return (x_mass)
+  return (x_recal)
 
 }
 
