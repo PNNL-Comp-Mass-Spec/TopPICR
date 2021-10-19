@@ -53,6 +53,18 @@ cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
 
     }
 
+    # Save the input to merge with after clustering. This will retain the same
+    # number of rows in the output as the input.
+    x_input <- x
+
+    # Remove redundant rows. This is necessary for determining the noise points
+    # later in the clustering step. If there is an RTalign/repMass point that is
+    # repeated more times than the value of min_size the point will be
+    # classified as a cluster even though there is only one point in the
+    # cluster.
+    x <- x %>%
+      dplyr::distinct(Dataset, Gene, RTalign, repMass)
+
   } else {
 
     mass <- "RecalMass"
@@ -105,6 +117,9 @@ cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
     tidyr::unnest(cols = c(data, cluster)) %>%
     dplyr::select(-NormRecalMass, -NormRTalign) %>%
     dplyr::ungroup()
+
+  # Combine the clustered data with the input data.
+  x_cluster <- dplyr::inner_join(x_input, x_cluster)
 
   # Return the cluster data frame.
   return (x_cluster)
