@@ -39,7 +39,8 @@
 #'
 cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
 
-  # Check if repMass is present in the x data frame.
+  # Set the mass object according to the repMass input and copy the x object
+  # input to join with after clustering.
   if (repMass) {
 
     # Create a variable name that points to the correct column name based on the
@@ -47,6 +48,7 @@ cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
     # repMass variable.
     mass <- "repMass"
 
+    # Check if repMass is present in the x data frame.
     if (!("repMass" %in% names(x))) {
 
       stop ("The variable repMass is not present in x.")
@@ -118,8 +120,14 @@ cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
     dplyr::select(-NormRecalMass, -NormRTalign) %>%
     dplyr::ungroup()
 
-  # Combine the clustered data with the input data.
-  x_cluster <- dplyr::inner_join(x_input, x_cluster)
+  # If repMass is TRUE the x_cluster object needs to be joined with the original
+  # input to preserve all the rows and columns in the original input.
+  if (repMass) {
+
+    # Combine the clustered data with the input data.
+    x_cluster <- dplyr::inner_join(x_input, x_cluster)
+
+  }
 
   # Return the cluster data frame.
   return (x_cluster)
