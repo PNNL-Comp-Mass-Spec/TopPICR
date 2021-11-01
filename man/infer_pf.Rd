@@ -21,3 +21,6 @@ The \code{infer_pf} function finds the smallest set of UniProt accessions
 (\code{UniProtAcc}) that maps to the largest number of amino acid sequences
 (\code{cleanSeq}).
 }
+\author{
+Vlad Petyuk
+}

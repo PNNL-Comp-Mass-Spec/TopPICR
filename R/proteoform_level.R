@@ -12,6 +12,8 @@
 #'   classification system for proteoform identifications. Nat Methods 16,
 #'   939–940 (2019). https://doi.org/10.1038/s41592-019-0573-x
 #'
+#' @author James Fulcher
+#'
 #' @export
 #'
 set_pf_level <- function (x) {

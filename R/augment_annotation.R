@@ -33,6 +33,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Vlad Petyuk, Evan A Martin
+#'
 #' @export
 #'
 augment_annotation <- function (x,
@@ -146,6 +148,7 @@ augment_annotation <- function (x,
 
 # augment_annotation auxiliary functions ---------------------------------------
 
+# @author Michael Nestor
 map_peptides_to_fasta <- function (peptides,
                                    fst,
                                    numCores = parallel::detectCores() - 1) {
@@ -199,6 +202,8 @@ find_matching_accessions <- function (peptides, fasta.df) {
 
 #'
 #' @importFrom foreach `%dopar%`
+#'
+#' @author Evan A Martin
 #'
 
 add_acc_info <- function (data, fst) {

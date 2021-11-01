@@ -34,3 +34,6 @@ within the threshold of an identified feature gene/cluster combination.
 \description{
 ...
 }
+\author{
+Evan A Martin
+}

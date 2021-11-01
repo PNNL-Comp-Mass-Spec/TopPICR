@@ -23,3 +23,6 @@ appear in the AnnType column.
 Calculates the E-value cutoff that keeps the FDR under the given threshold
 within each annotation type.
 }
+\author{
+Evan A Martin
+}

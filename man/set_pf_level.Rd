@@ -14,11 +14,14 @@ another downstream) function.}
 A \code{data.table} with the \code{Proteoform Level} variable added.
 }
 \description{
-Assigns each \code{Proteoform} in the data a level based on the five-level
-classification system proposed by Smith et al. 2019.
+Assigns each \code{Proteoform} a level based on the classification system
+proposed by Smith et al. 2019.
 }
 \references{
 Smith, L.M., Thomas, P.M., Shortreed, M.R. et al. A five-level
 classification system for proteoform identifications. Nat Methods 16,
 939–940 (2019). https://doi.org/10.1038/s41592-019-0573-x
+}
+\author{
+James Fulcher
 }

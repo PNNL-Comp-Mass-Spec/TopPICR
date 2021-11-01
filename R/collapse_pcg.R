@@ -13,6 +13,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Vlad Petyuk
+#'
 #' @export
 #'
 combine_features <- function (x, feature) {
@@ -41,6 +43,8 @@ combine_features <- function (x, feature) {
 #' @return A \code{data.table} ...
 #'
 #' @importFrom magrittr %>%
+#'
+#' @author Evan A Martin, Vlad Petyuk
 #'
 #' @export
 #'

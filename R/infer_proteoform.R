@@ -14,6 +14,8 @@
 #'
 #' @import data.table
 #'
+#' @author Vlad Petyuk
+#'
 #' @export
 #'
 infer_pf <- function (x) {
@@ -46,6 +48,7 @@ infer_pf <- function (x) {
 
 # infer_pf auxiliary functions -------------------------------------------------
 
+# @author Vlad Petyuk
 inference <- function (x) {
 
   res <- list()

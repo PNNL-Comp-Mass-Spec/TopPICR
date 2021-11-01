@@ -35,6 +35,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {

@@ -17,3 +17,6 @@ merge_clusters_oc(x, oc_cutoff)
 \description{
 ...
 }
+\author{
+Vlad Petyuk
+}

@@ -39,3 +39,6 @@ Cluster the data using hierarchical clustering with the
 \code{\link[stats]{hclust}} function. The data are clustered with the
 normalized recalibrated mass and the normalized aligned retention times.
 }
+\author{
+Evan A Martin
+}

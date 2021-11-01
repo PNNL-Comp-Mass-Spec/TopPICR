@@ -15,3 +15,6 @@ A \code{data.table} ...
 \description{
 ...
 }
+\author{
+Evan A Martin, Vlad Petyuk
+}

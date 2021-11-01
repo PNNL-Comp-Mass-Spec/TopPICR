@@ -16,6 +16,8 @@
 #'   TrEMBL). Note: the order of the annotation types depends on the order they
 #'   appear in the AnnType column.
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 eval_cutoff <- function (x, fdr_threshold) {
@@ -83,6 +85,7 @@ control_fdr <- function (x, e_vals) {
 
 # FDR control auxiliary functions ----------------------------------------------
 
+# @author Evan A Martin
 find_cutoff <- function (x, ann_type, fdr_threshold) {
 
   # Create a copy of x filtered by annotation type. This subsetted data frame
@@ -185,6 +188,7 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
 
 }
 
+# @author Evan A Martin
 compute_fdr <- function (eval_cutoff, x) {
 
   fdr <- x %>%

@@ -22,3 +22,6 @@ Run the \code{\link[stats]{loess}} function using the values from the
 \code{Feature apex} variable between the reference data set and all other
 data sets.
 }
+\author{
+Evan A Martin
+}

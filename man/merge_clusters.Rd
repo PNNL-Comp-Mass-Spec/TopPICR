@@ -43,3 +43,6 @@ envelope around the centroid of the cluster. If a point falls within this
 envelope the point is merged with the cluster. This process is repeated for
 each cluster (except the noise cluster).
 }
+\author{
+Evan A Martin
+}

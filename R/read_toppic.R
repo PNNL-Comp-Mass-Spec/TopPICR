@@ -37,6 +37,8 @@
 #'
 #' @md
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 read_toppic <- function (file_path, file_name, ...) {

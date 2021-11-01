@@ -39,6 +39,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 merge_clusters <- function (x, errors, repMass = TRUE, min_size, ppm_cutoff,
@@ -95,6 +97,7 @@ merge_clusters <- function (x, errors, repMass = TRUE, min_size, ppm_cutoff,
 
 # merge_clusters auxiliary functions -------------------------------------------
 
+# @author Evan A Martin
 # The merge_mrt function (merge clusters based on a Mass/Retention Time
 # envelope around each cluster) changes cluster membership based on the
 # following algorithm:
@@ -136,7 +139,7 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
   # starts with 0 because points cannot be added to the 0 (noise) cluster based
   # on their mass or retention time. A point can only be changed to a noise
   # point (changed to the 0 cluster) if it belongs to a cluster with fewer than
-  # 10 points.
+  # min_size points.
   used_clusters <- c(0)
 
   # Use mass/rt envelope and ppm to determine membership ---------------
@@ -217,6 +220,7 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
 
 }
 
+# @author Evan A Martin
 # The correct cluster function determines if a point outside a cluster should be
 # combined with the given cluster based on the distance in ppm between the
 # cluster median and the corrected isotopic mass of the point. This function

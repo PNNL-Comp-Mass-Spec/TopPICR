@@ -43,3 +43,6 @@ containing metadata and reads in the remaining lines of the file starting
 with the header. Variables needed for the remainder of the TopPICR workflow
 are added and variables not used by TopPICR are removed.
 }
+\author{
+Evan A Martin
+}

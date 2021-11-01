@@ -21,6 +21,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 gen_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
@@ -39,6 +41,7 @@ gen_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
 
 }
 
+# @author Evan A Martin
 # This function will carry out the bulk of the calculations (sorting, grouping,
 # creating group numbers, ...)
 groupate <- function (x, gene, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {

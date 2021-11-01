@@ -26,3 +26,6 @@ following variables were added/removed:\tabular{ll}{
 Calibrates the mass to a reference data set using the error terms returned by
 the \code{calc_error} function.
 }
+\author{
+Evan A Martin
+}

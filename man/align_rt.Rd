@@ -28,3 +28,6 @@ Aligns all retention times to a reference data set using the times from the
 \code{Feature apex} column. The \code{loess} function from the \code{stats}
 package is used for the alignment.
 }
+\author{
+Evan A Martin
+}

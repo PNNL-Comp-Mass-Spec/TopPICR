@@ -8,6 +8,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Vlad Petyuk
+#'
 #' @export
 #'
 rm_false_gene <- function (x) {

@@ -25,6 +25,8 @@
 #' @return A \code{data.table} containing all unidentified features that fall
 #'   within the threshold of an identified feature gene/cluster combination.
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 impute_fi <- function(x, feature, ppm_cutoff, rt_cutoff) {

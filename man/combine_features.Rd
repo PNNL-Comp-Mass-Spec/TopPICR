@@ -20,3 +20,6 @@ Combines the identified and unidentified feature data. The maximum feature
 intensity is selected for each combination of Dataset, CV, Gene, and pcGroup
 after joining the two data tables.
 }
+\author{
+Vlad Petyuk
+}

@@ -21,6 +21,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 calc_error <- function (x, ref_ds) {
@@ -31,6 +33,7 @@ calc_error <- function (x, ref_ds) {
   # errors (by Dataset).
   ppm_stats <- x %>%
     dplyr::filter(`#unexpected modifications` == 0) %>%
+    dplyr::filter(abs(`Precursor mass` - `Adjusted precursor mass`) < 0.5) %>%
     dplyr::mutate(ppm_error = (1e6 * (`Precursor mass` -
                                        `Adjusted precursor mass`) /
                                  `Adjusted precursor mass`)) %>%
@@ -94,6 +97,8 @@ calc_error <- function (x, ref_ds) {
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 recalibrate_mass <- function (x, errors, repMass = TRUE, feature = FALSE) {
@@ -117,6 +122,10 @@ recalibrate_mass <- function (x, errors, repMass = TRUE, feature = FALSE) {
     mass <- "Precursor mass"
 
   }
+
+  #!#!#!#!#!
+  # Include a check that doesn't allow repMass = TRUE AND feature = TRUE.
+  #!#!#!#!#!
 
   # Add the ppm_median variable to the data. This variable will be used to carry
   # out the actual recalibration.
@@ -166,6 +175,7 @@ recalibrate_mass <- function (x, errors, repMass = TRUE, feature = FALSE) {
 
 # calc_error auxiliary functions -----------------------------------------------
 
+# @author Vlad Petyuk, James Fulcher, Evan A Martin
 # Calculates the median Precursor mass of the mass values that are within 0.5
 # Dalton of the Adjusted precursor mass. There are cases when all of the
 # Precursor masses are outside this 0.5 Dalton range of the Adjusted precursor
@@ -213,6 +223,7 @@ robust_median <- function (mass, adj_mass) {
 
 }
 
+# @author Evan A Martin
 # rt: A vector of retention times grouped by Dataset.
 # pf: A vector of proteoforms grouped by Dataset.
 # fi: A vector of feature intensity values. These values are grouped by Dataset.

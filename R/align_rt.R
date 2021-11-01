@@ -14,6 +14,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Evan A Martin
+#'
 #' @export
 #'
 find_ref_ds <- function (x) {
@@ -45,6 +47,8 @@ find_ref_ds <- function (x) {
 #'   reference data set.
 #'
 #' @importFrom magrittr %>%
+#'
+#' @author Evan A Martin
 #'
 #' @export
 #'
@@ -144,6 +148,8 @@ form_model <- function (x, ref_ds, ...) {
 #' @md
 #'
 #' @importFrom magrittr %>%
+#'
+#' @author Evan A Martin
 #'
 #' @export
 #'

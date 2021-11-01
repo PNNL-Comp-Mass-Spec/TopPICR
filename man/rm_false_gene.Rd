@@ -15,3 +15,6 @@ rm_false_gene(x)
 \description{
 ...
 }
+\author{
+Vlad Petyuk
+}

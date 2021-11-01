@@ -20,3 +20,6 @@ gen_pcg(x, errors, ppm_cutoff, n_Da, n_rt_sd)
 \description{
 ...
 }
+\author{
+Evan A Martin
+}

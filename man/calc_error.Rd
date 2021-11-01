@@ -26,3 +26,6 @@ Computes the error in ppm and retention time between each data set and a
 reference data set. The default reference data set (returned by the
 \code{find_ref_ds} function) is the one with the most unique proteoforms.
 }
+\author{
+Evan A Martin
+}

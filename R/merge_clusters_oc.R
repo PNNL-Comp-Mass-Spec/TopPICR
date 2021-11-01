@@ -10,6 +10,8 @@
 #'
 #' @importFrom magrittr %>%
 #'
+#' @author Vlad Petyuk
+#'
 #' @export
 #'
 merge_clusters_oc <- function (x, oc_cutoff) {
@@ -23,6 +25,7 @@ merge_clusters_oc <- function (x, oc_cutoff) {
 
 }
 
+# @author Vlad Petyuk
 oc <- function (xi, xj) {
 
   ci <- xi[, "Proteoform", drop = TRUE]
@@ -32,6 +35,7 @@ oc <- function (xi, xj) {
 
 }
 
+# @author Vlad Petyuk
 get_mergeable_clusters <- function(x, oc_cutoff){
   clusters <- unique(x$cluster)
   for(i in clusters){
@@ -49,6 +53,7 @@ get_mergeable_clusters <- function(x, oc_cutoff){
   return(NULL)
 }
 
+# @author Vlad Petyuk
 # Recursion
 # not an efficient algorithm, especially given the updates of cluster membership
 # after every iteration. But it works.
@@ -64,6 +69,7 @@ merge_clusters2 <- function(clusters_df, oc_cutoff){
   }
 }
 
+# @author Vlad Petyuk
 merge_clusters_wrapper <- function (x, oc_cutoff) {
   idx0 <- x$cluster == 0
   x$cluster_new <- 0
