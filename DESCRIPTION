@@ -25,6 +25,7 @@ Imports:
     Biostrings,
     data.table,
     dplyr,
+    foreach,
     magrittr,
     rlang,
     stringr,
