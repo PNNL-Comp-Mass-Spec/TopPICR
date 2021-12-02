@@ -1,3 +1,109 @@
+# Create gene/cluster combinations. These could contain clusters from two
+# different genes.
+
+#' Combine clusters across genes
+#'
+#' Combine two clusters if they have the same centroid (or are within the
+#' specified mass/retention time threshold) but the genes of the two clusters
+#' are different.
+#'
+#' @param x ...
+#'
+#' @param cutoff_ppm ...
+#'
+#' @param cutoff_rt ...
+#'
+#' @return ...
+#'
+#' @importFrom magrittr %>%
+#'
+#' @author Evan A Martin
+#'
+#' @export
+#'
+create_gcc <- function (x, cutoff_ppm, cutoff_rt) {
+
+  # Keep only unique Gene/cluster combinations (excluding the 0 cluster).
+  # Calculate the centroid of each cluster. The centroid is the median mass and
+  # median retention time of all points in the cluster.
+  unique_gccs <- x %>%
+    filter(cluster != 0) %>%
+    group_by(Gene, cluster) %>%
+    mutate(gcc = paste(Gene, cluster, sep = "_"),
+           cntr_mass = median(RecalMass, na.rm = TRUE),
+           cntr_rt = median(RTalign, na.rm = TRUE)) %>%
+    distinct(Gene, cluster, gcc, cntr_mass, cntr_rt)
+
+  # Nab the number of unique gccs. This will be used to keep track of which gccs
+  # need to be combined into one gcc.
+  n_gccs <- nrow(unique_gccs)
+
+  # Loop through each gcc and compare with all other gccs to determine if they
+  # share the same centroid (within the tolerance given).
+  for (e in 1:n_gccs) {
+
+    for (v in 1:n_gccs) {
+
+      # Only perform computations on the upper triangular matrix.
+      if (e < v) {
+
+        # Check if the retention time falls within the threshold. If it does
+        # proceed with calculating the ppm difference between the two gccs.
+        if (abs(unique_gccs$cntr_rt[[e]] -
+                unique_gccs$cntr_rt[[v]]) < cutoff_rt) {
+
+          # Compute the ppm difference between the two gccs.
+          diff_ppm <- abs(
+            (unique_gccs$cntr_mass[[e]] - unique_gccs$cntr_mass[[v]]) /
+              unique_gccs$cntr_mass[[e]] * 1e6
+          )
+
+          # Check if the vth gcc falls within the threshold of the eth gcc and
+          # if the genes for the two gccs are different. If the genes are
+          # different the two gccs will be combined.
+          if (diff_ppm < cutoff_ppm &&
+              unique_gccs$Gene[[e]] != unique_gccs$Gene[[v]]) {
+
+            # Combine the two gccs with the same centroid into one gcc. This new
+            # gcc will span two different genes.
+            unique_gccs$gcc[[e]] <- paste(
+              paste(unique_gccs$Gene[[e]],
+                    unique_gccs$cluster[[e]],
+                    sep = "_"),
+              paste(unique_gccs$Gene[[v]],
+                    unique_gccs$cluster[[v]],
+                    sep = "_"),
+              sep = ";"
+            )
+            unique_gccs$gcc[[v]] <- paste(
+              paste(unique_gccs$Gene[[e]],
+                    unique_gccs$cluster[[e]],
+                    sep = "_"),
+              paste(unique_gccs$Gene[[v]],
+                    unique_gccs$cluster[[v]],
+                    sep = "_"),
+              sep = ";"
+            )
+
+
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return (dplyr::inner_join(x,
+                            dplyr::select(unique_gccs,
+                                          Gene,
+                                          cluster,
+                                          gcc)))
+
+}
+
 # The main function will create a new column pcg for Proteoform Cluster Group
 # (similar to cluster_new from the merge_clusters function). This function will
 # start with the most abundant cluster's centroid and compare all remaining
@@ -5,6 +111,7 @@
 # mass/rt envelope of the main cluster. If clusters are grouped with the main
 # cluster their centroids will be removed from the list and will not be
 # considered in creating their own group with other clusters.
+
 #' ...
 #'
 #' ...
@@ -134,7 +241,7 @@ groupate <- function (x, gene, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {
                              0))) / metroid$cntr_mass * 1e6
         )
       ) %>%
-    dplyr::filter(diff_ppm < ppm_cutoff)
+      dplyr::filter(diff_ppm < ppm_cutoff)
 
     # Check if there are any clusters that meet the criteria for being grouped
     # with the current cluster. If there aren't then the current cluster cannot
