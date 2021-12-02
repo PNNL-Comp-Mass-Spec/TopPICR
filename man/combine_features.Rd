@@ -2,7 +2,7 @@
 % Please edit documentation in R/collapse_pcg.R
 \name{combine_features}
 \alias{combine_features}
-\title{...}
+\title{Combine identified and unidentified feature data}
 \usage{
 combine_features(x, feature)
 }

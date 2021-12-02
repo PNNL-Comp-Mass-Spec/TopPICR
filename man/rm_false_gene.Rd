@@ -2,19 +2,19 @@
 % Please edit documentation in R/remove_bad_genes.R
 \name{rm_false_gene}
 \alias{rm_false_gene}
-\title{...}
+\title{Select one gene per feature}
 \usage{
 rm_false_gene(x)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{read_toppic} function.}
 }
 \value{
-...
+A \code{data.table}.
 }
 \description{
 ...
 }
 \author{
-Vlad Petyuk
+Vlad Petyuk, Evan A Martin
 }

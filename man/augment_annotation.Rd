@@ -33,7 +33,7 @@ variables have been added/removed:\tabular{ll}{
 }
 \description{
 All UniProt accessions that match each amino acid sequence will be added to
-the \code{data.table}. Currently the \code{data.table} only consits of the
+the \code{data.table}. Currently the \code{data.table} only consists of the
 highest scoring UniProt accession for each amino acid sequence. Additional
 variables are also created from the current variables.
 }

@@ -1,14 +1,14 @@
-#' ...
+#' Select one gene per feature
 #'
 #' ...
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{read_toppic} function.
 #'
-#' @return ...
+#' @return A \code{data.table}.
 #'
 #' @importFrom magrittr %>%
 #'
-#' @author Vlad Petyuk
+#' @author Vlad Petyuk, Evan A Martin
 #'
 #' @export
 #'
@@ -23,9 +23,6 @@ rm_false_gene <- function (x) {
     dplyr::ungroup() %>%
     dplyr::select(Dataset, CV, `Feature apex`, `Feature intensity`, Gene)
 
-  x2 <- x %>%
-    dplyr::semi_join(y)
-
-  return (x2)
+  return (dplyr::semi_join(x, y))
 
 }
