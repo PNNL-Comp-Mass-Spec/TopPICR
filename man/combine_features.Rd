@@ -4,16 +4,20 @@
 \alias{combine_features}
 \title{Combine identified and unidentified feature data}
 \usage{
-combine_features(x, feature)
+combine_features(ms2, ms1, summary_fn = "max")
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{gen_pcg} function.}
+\item{ms2}{A \code{data.table} containing the identified feature data.}
 
-\item{feature}{A \code{data.table} containing the unidentified feature data
-output from the \code{impute_fi} function.}
+\item{ms1}{A \code{data.table} containing the unidentified feature data.}
+
+\item{summary_fn}{A character string specifying the function that will be
+used to select a representative feature intensity. The current functions
+allowed are "max" or "sum". The default input is "max".}
 }
 \value{
-A \code{data.table} ...
+A \code{data.table} containing the combined ms1 and ms2 feature
+intensity values.
 }
 \description{
 Combines the identified and unidentified feature data. The maximum feature

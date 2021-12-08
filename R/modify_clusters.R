@@ -6,9 +6,11 @@
 # cluster their centroids will be removed from the list and will not be
 # considered in creating their own group with other clusters.
 
-#' ...
+#' Combines clusters based on mass and retention time
 #'
-#' ...
+#' Compares the centroid of each cluster within a gene and combines the two
+#' clusters if the centroids fall within the specified threshold. The clusters
+#' are combined by creating a new cluster membership variable \code{pcGroup}.
 #'
 #' @param x ...
 #'
@@ -26,7 +28,7 @@
 #'
 #' @export
 #'
-gen_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
+create_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
 
   x_group <- x %>%
     dplyr::filter(cluster != 0) %>%

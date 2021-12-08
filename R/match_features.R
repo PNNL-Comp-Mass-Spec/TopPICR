@@ -2,9 +2,9 @@
 #'
 #' ...
 #'
-#' @param x A \code{data.table} output from the \code{merge_clusters} function.
+#' @param ms2 A \code{data.table} containing the identified feature data.
 #'
-#' @param feature A \code{data.table} containing the unidentified feature data.
+#' @param ms1 A \code{data.table} containing the unidentified feature data.
 #'   This data is created from the files output by TopPIC ending with
 #'   "ms1.feature" and must contain the \code{RTalign} and \code{RecalMass}
 #'   variables. These variables are created with the unidentified feature data
@@ -29,9 +29,9 @@
 #'
 #' @export
 #'
-impute_fi <- function(x, feature, ppm_cutoff, rt_cutoff) {
+match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff) {
 
-  centroids <- x %>%
+  centroids <- ms2 %>%
     # Remove the noise cluster. We don't want to impute feature intensity values
     # for it.
     dplyr::filter(cluster != 0) %>%
@@ -54,7 +54,7 @@ impute_fi <- function(x, feature, ppm_cutoff, rt_cutoff) {
   unidentified <- foreach::foreach(e = 1:dim(centroids)[[1]],
                                    .export = "%>%") %dopar% {
 
-    features <- feature %>%
+    features <- ms1 %>%
       dplyr::filter(
         (1e6 * abs(RecalMass - centroids$meanMass[[e]]) /
            centroids$meanMass[[e]]) < ppm_cutoff
