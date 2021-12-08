@@ -4,10 +4,10 @@
 \alias{match_features}
 \title{Extract feature intensity values from unidentified feature data}
 \usage{
-match_features(x, ms1, ppm_cutoff, rt_cutoff)
+match_features(ms2, ms1, ppm_cutoff, rt_cutoff)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{merge_clusters} function.}
+\item{ms2}{A \code{data.table} containing the identified feature data.}
 
 \item{ms1}{A \code{data.table} containing the unidentified feature data.
 This data is created from the files output by TopPIC ending with
