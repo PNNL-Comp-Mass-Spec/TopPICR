@@ -4,15 +4,12 @@
 \alias{merge_clusters}
 \title{Merge clusters using a mass/retention time envelope}
 \usage{
-merge_clusters(x, errors, repMass = TRUE, min_size, ppm_cutoff, n_Da, n_rt_sd)
+merge_clusters(x, errors, min_size, ppm_cutoff, n_Da, n_rt_sd)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{cluster} function.}
 
 \item{errors}{A \code{list} output from the \code{calc_error} function.}
-
-\item{repMass}{Logical. If TRUE the representative mass will be used when
-merging clusters.}
 
 \item{min_size}{An integer value indicating the minimum number of points a
 cluster must have. All clusters with fewer members than min_size will be

@@ -4,22 +4,22 @@
 \alias{recalibrate_mass}
 \title{Recalibrate the mass}
 \usage{
-recalibrate_mass(x, errors, repMass = TRUE, feature = FALSE)
+recalibrate_mass(x, errors, var_name)
 }
 \arguments{
 \item{x}{The \code{data.table} output from the \code{align_rt} function.}
 
 \item{errors}{A list output from the \code{calc_error} function.}
 
-\item{repMass}{Logical. If TRUE a representative mass will be calculated from
-the \code{RecalMass} variable. Rows will be grouped by \code{Proteoform}.}
+\item{var_name}{A character string. The name of the mass variable (e.g.,
+\verb{Precursor mass}) that will be recalibrated with the ppm error calculated
+in the \code{calc_error} function.}
 }
 \value{
 A \code{data.table} containing the recalibrated mass variable. The
 following variables were added/removed:\tabular{ll}{
    Added \tab Removed \cr
    \code{RecalMass} \tab  \cr
-   \code{repMass} (when repMass = TRUE) \tab  \cr
 }
 }
 \description{

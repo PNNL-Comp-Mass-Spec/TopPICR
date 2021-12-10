@@ -9,9 +9,6 @@
 #'
 #' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param repMass Logical. If TRUE the representative mass will be used when
-#'   clustering.
-#'
 #' @param method A character string indicating what agglomeration method should
 #'   be used in the hclust function. See \code{\link[stats]{hclust}} for more
 #'   details.
@@ -39,99 +36,55 @@
 #'
 #' @export
 #'
-cluster <- function (x, errors, repMass = TRUE, method, height, min_size) {
+cluster <- function (x, errors, method, height, min_size) {
 
-  # Set the mass object according to the repMass input and copy the x object
-  # input to join with after clustering.
-  if (repMass) {
-
-    # Create a variable name that points to the correct column name based on the
-    # input of the repMass argument. We will either cluster on the RecalMass or
-    # repMass variable.
-    mass <- "repMass"
-
-    # Check if repMass is present in the x data frame.
-    if (!("repMass" %in% names(x))) {
-
-      stop ("The variable repMass is not present in x.")
-
-    }
-
-    # Save the input to merge with after clustering. This will retain the same
-    # number of rows in the output as the input.
-    x_input <- x
-
-    # Remove redundant rows. This is necessary for determining the noise points
-    # later in the clustering step. If there is an RTalign/repMass point that is
-    # repeated more times than the value of min_size the point will be
-    # classified as a cluster even though there is only one point in the
-    # cluster.
-    x <- x %>%
-      dplyr::distinct(Dataset, Gene, RTalign, repMass)
-
-  } else {
-
-    mass <- "RecalMass"
-
-  }
-
-  x_cluster <- x %>%
-    dplyr::group_by(Gene) %>%
-    # Remove rows corresponding to Genes with only one observation because
-    # hclust will throw an error unless there are at least two observations.
-    dplyr::add_count(name = "obs") %>%
-    dplyr::filter(obs > 1) %>%
-    dplyr::select(-obs) %>%
-    dplyr::ungroup() %>%
-    # Normalize the mass according to the ppm error that was computed in the
-    # calc_error function. The normalized recalibrated mass will be used for
-    # clustering. This means the h argument in the cutree function will
-    # correspond to the standard deviation.
-    dplyr::mutate(
-      NormRecalMass = log10(!!rlang::sym(mass)) / log10(1 + errors$ppm_sd / 1e6)
-    ) %>%
-    # Normalize the aligned rt according to the rt error that was computed in
-    # the calc_error function. The normalized rt will be used for clustering.
-    # This means the h argument in the cutree function will correspond to the
-    # standard deviation.
-    dplyr::mutate(NormRTalign = RTalign / errors$rt_sd) %>%
-    dplyr::ungroup() %>%
-    dplyr::nest_by(Gene) %>%
-    dplyr::mutate(
-      cluster = list(
-        stats::cutree(
-          stats::hclust(stats::dist(dplyr::select(data,
-                                                  NormRTalign,
-                                                  NormRecalMass)),
-                        method = method),
-          h = height
+  return (
+    x %>%
+      dplyr::group_by(Gene) %>%
+      # Remove rows corresponding to Genes with only one observation because
+      # hclust will throw an error unless there are at least two observations.
+      dplyr::add_count(name = "obs") %>%
+      dplyr::filter(obs > 1) %>%
+      dplyr::select(-obs) %>%
+      dplyr::ungroup() %>%
+      # Normalize the mass according to the ppm error that was computed in the
+      # calc_error function. The normalized recalibrated mass will be used for
+      # clustering. This means the h argument in the cutree function will
+      # correspond to the standard deviation.
+      dplyr::mutate(
+        NormRecalMass = log10(RecalMass) / log10(1 + errors$ppm_sd / 1e6)
+      ) %>%
+      # Normalize the aligned rt according to the rt error that was computed in
+      # the calc_error function. The normalized rt will be used for clustering.
+      # This means the h argument in the cutree function will correspond to the
+      # standard deviation.
+      dplyr::mutate(NormRTalign = RTalign / errors$rt_sd) %>%
+      dplyr::ungroup() %>%
+      dplyr::nest_by(Gene) %>%
+      dplyr::mutate(
+        cluster = list(
+          stats::cutree(
+            stats::hclust(stats::dist(dplyr::select(data,
+                                                    NormRTalign,
+                                                    NormRecalMass)),
+                          method = method),
+            h = height
+          )
         )
-      )
-    ) %>%
-    # Find all clusters that have fewer than min_size members. In the next step
-    # these points will be reclassified as "noise" points.
-    dplyr::mutate(noise = list(tibble::tibble(clust = cluster) %>%
-                                 dplyr::group_by(clust) %>%
-                                 dplyr::tally() %>%
-                                 dplyr::filter(n < min_size) %>%
-                                 dplyr::pull(clust))) %>%
-    # Convert all clusters with fewer than min_size members to cluster 0.
-    dplyr::mutate(cluster = list(replace(cluster, cluster %in% noise, 0))) %>%
-    dplyr::select(Gene, data, cluster) %>%
-    tidyr::unnest(cols = c(data, cluster)) %>%
-    dplyr::select(-NormRecalMass, -NormRTalign) %>%
-    dplyr::ungroup()
-
-  # If repMass is TRUE the x_cluster object needs to be joined with the original
-  # input to preserve all the rows and columns in the original input.
-  if (repMass) {
-
-    # Combine the clustered data with the input data.
-    x_cluster <- dplyr::inner_join(x_input, x_cluster)
-
-  }
-
-  # Return the cluster data frame.
-  return (x_cluster)
+      ) %>%
+      # Find all clusters that have fewer than min_size members. In the next step
+      # these points will be reclassified as "noise" points.
+      dplyr::mutate(noise = list(tibble::tibble(clust = cluster) %>%
+                                   dplyr::group_by(clust) %>%
+                                   dplyr::tally() %>%
+                                   dplyr::filter(n < min_size) %>%
+                                   dplyr::pull(clust))) %>%
+      # Convert all clusters with fewer than min_size members to cluster 0.
+      dplyr::mutate(cluster = list(replace(cluster, cluster %in% noise, 0))) %>%
+      dplyr::select(Gene, data, cluster) %>%
+      tidyr::unnest(cols = c(data, cluster)) %>%
+      dplyr::select(-NormRecalMass, -NormRTalign) %>%
+      dplyr::ungroup()
+  )
 
 }

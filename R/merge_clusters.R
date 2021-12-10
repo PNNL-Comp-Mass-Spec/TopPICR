@@ -10,9 +10,6 @@
 #'
 #' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param repMass Logical. If TRUE the representative mass will be used when
-#'   merging clusters.
-#'
 #' @param min_size An integer value indicating the minimum number of points a
 #'   cluster must have. All clusters with fewer members than min_size will be
 #'   reclassified as "noise" points.
@@ -43,35 +40,12 @@
 #'
 #' @export
 #'
-merge_clusters <- function (x, errors, repMass = TRUE, min_size, ppm_cutoff,
-                            n_Da, n_rt_sd) {
-
-  # Check if repMass is present in the x data frame.
-  if (repMass) {
-
-    # Create a variable name that points to the correct column name based on the
-    # input of the repMass argument. We will either cluster on the RecalMass or
-    # repMass variable.
-    mass <- "repMass"
-
-    if (!("repMass" %in% names(x))) {
-
-      stop ("The variable repMass is not present in x.")
-
-    }
-
-  } else {
-
-    mass <- "RecalMass"
-
-  }
+merge_clusters <- function (x, errors, min_size, ppm_cutoff, n_Da, n_rt_sd) {
 
   x_cluster <- x %>%
     dplyr::group_by(Gene) %>%
     dplyr::mutate(
-      cluster_new = merge_mrt(x = .,
-                              mass = mass,
-                              gene_name = unique(Gene),
+      cluster_new = merge_mrt(x = dplyr::across(),
                               rt_error = errors$rt_sd,
                               ppm_cutoff = ppm_cutoff,
                               n_Da = n_Da,
@@ -111,26 +85,21 @@ merge_clusters <- function (x, errors, repMass = TRUE, min_size, ppm_cutoff,
 #    being compared to otherwise leave the cluster as is
 # 7. For efficiency, remove the points belonging to the most abundant cluster
 # 8. Repeat steps 3-7 until all clusters have been iterated through
-merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
+merge_mrt <- function (x, rt_error, ppm_cutoff,
                        n_Da, n_rt_sd) {
-
-  # Extract all rows corresponding to a given gene.
-  x_gn_clstr <- x %>%
-    dplyr::filter(Gene == gene_name) %>%
-    dplyr::select(Gene, !!rlang::sym(mass), RTalign, cluster)
 
   # Compute the number of unique clusters for the current gene. This will be
   # used to determine if the algorithm to change cluster membership needs to be
   # run. For example, if there is only one cluster for a gene then nothing needs
   # to be done.
-  n_clstrs <- length(unique(x_gn_clstr$cluster))
+  n_clstrs <- dplyr::n_distinct(x$cluster)
 
   # Check if there is only one cluster for the given gene. This is used to
   # determine if the change cluster membership algorithm needs to be run.
   if (n_clstrs == 1) {
 
     # Return the original cluster vector because nothing needs to be done to it.
-    return (x_gn_clstr$cluster)
+    return (x$cluster)
 
   }
 
@@ -148,7 +117,7 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
   while (TRUE) {
 
     # Determine most numerous cluster (excluding 0).
-    top_cluster <- x_gn_clstr %>%
+    top_cluster <- x %>%
       dplyr::filter(!(cluster %in% used_clusters)) %>%
       dplyr::group_by(cluster) %>%
       dplyr::tally() %>%
@@ -156,41 +125,34 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
       dplyr::slice(1) %>%
       dplyr::pull(cluster)
 
-    # Find median for mass and rt for the top cluster.
-    med_mass <- x_gn_clstr %>%
+    # Find median mass and min/max rt for the top cluster.
+    moss_piglet <- x %>%
       dplyr::filter(cluster == top_cluster) %>%
       dplyr::summarize(
-        med_mass = stats::median(!!rlang::sym(mass), na.rm = TRUE)
-      ) %>%
-      dplyr::pull(med_mass)
-    min_rt <- x_gn_clstr %>%
-      dplyr::filter(cluster == top_cluster) %>%
-      dplyr::summarize(min_rt = min(RTalign, na.rm = TRUE)) %>%
-      dplyr::pull(min_rt)
-    max_rt <- x_gn_clstr %>%
-      dplyr::filter(cluster == top_cluster) %>%
-      dplyr::summarize(max_rt = max(RTalign, na.rm = TRUE)) %>%
-      dplyr::pull(max_rt)
+        med_mass = stats::median(RecalMass, na.rm = TRUE),
+        min_rt = min(RTalign, na.rm = TRUE),
+        max_rt = max(RTalign, na.rm = TRUE)
+      )
 
     used_clusters <- append(used_clusters, top_cluster)
 
-    # Find indices of x_gn_clstr that don't correspond to past clusters (keep
+    # Find indices of x that don't correspond to past clusters (keep
     # 0).
-    idx <- which(!(x_gn_clstr$cluster %in% used_clusters[-1]))
+    idx <- which(!(x$cluster %in% used_clusters[-1]))
 
     # Check the length of idx. If it is greater than zero proceed with changing
     # cluster membership for points within the mass/rt envelope.
     if (length(idx) > 0) {
 
       # Change cluster membership according to the isotopic mass.
-      x_gn_clstr[idx, ] <- x_gn_clstr %>%
+      x[idx, ] <- x %>%
         dplyr::filter(!(cluster %in% used_clusters[-1])) %>%
         dplyr::mutate(
-          cluster = correction(med_mass = med_mass,
-                               min_rt = min_rt,
-                               max_rt = max_rt,
+          cluster = correction(med_mass = dplyr::pull(moss_piglet, med_mass),
+                               min_rt = dplyr::pull(moss_piglet, min_rt),
+                               max_rt = dplyr::pull(moss_piglet, max_rt),
                                clstr = cluster,
-                               mass = !!rlang::sym(mass),
+                               mass = RecalMass,
                                rt = RTalign,
                                top_clstr = top_cluster,
                                rt_error = rt_error,
@@ -208,7 +170,7 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
     # does not have any points classified as noise. If this is the case the
     # used_clusters vector could be larger than the unique clusters because this
     # vector always includes the 0 or noise cluster.
-    if (length(used_clusters) >= length(unique(x_gn_clstr$cluster))) {
+    if (length(used_clusters) >= dplyr::n_distinct(x$cluster)) {
 
       break
 
@@ -216,7 +178,7 @@ merge_mrt <- function (x, mass, gene_name, rt_error, ppm_cutoff,
 
   }
 
-  return (x_gn_clstr$cluster)
+  return (x$cluster)
 
 }
 
