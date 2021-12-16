@@ -100,24 +100,10 @@ augment_annotation <- function (x,
                                        accession) ~ "TrEMBL",
                                  grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
                                        accession) ~ "SwissProt",
-                                 TRUE ~ NA_character_)
+                                 TRUE ~ NA_character_),
+      percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
     ) %>%
     dplyr::select(-accession)
-
-  # Create the protLength, firstAA, and lastAA variables.
-  acc_info <- add_acc_info(data = x_norm,
-                           fst = fst_norm)
-
-  # Add the variables created in the acc_info object to the x_norm object.
-  x_norm <- dplyr::inner_join(x = x_norm,
-                              y = acc_info)
-
-  # Add AnnType and percentCoverage (the percentage each observed amino
-  # acid sequence matches the reference amino acid sequence) to x_norm.
-  x_norm <- x_norm %>%
-    dplyr::mutate(
-      percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
-    )
 
   # Augment annotation: decoy --------------------------------------------------
 
@@ -158,24 +144,10 @@ augment_annotation <- function (x,
                                        accession) ~ "TrEMBL",
                                  grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
                                        accession) ~ "SwissProt",
-                                 TRUE ~ NA_character_)
+                                 TRUE ~ NA_character_),
+      percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
     ) %>%
     dplyr::select(-accession)
-
-  # Create the protLength, firstAA, and lastAA variables.
-  acc_info <- add_acc_info(data = x_decoy,
-                           fst = fst_decoy)
-
-  # Add the variables created in the acc_info object to the x_decoy object.
-  x_decoy <- dplyr::inner_join(x = x_decoy,
-                               y = acc_info)
-
-  # Add AnnType and percentCoverage (the percentage each observed amino
-  # acid sequence matches the reference amino acid sequence) to x_decoy.
-  x_decoy <- x_decoy %>%
-    dplyr::mutate(
-      percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
-    )
 
   # Combine the normal and decoy data tables and return the combined table.
   return (rbind(x_norm, x_decoy))
@@ -191,6 +163,7 @@ map_peptides_to_fasta <- function (peptides,
 
   fasta.df <- data.frame(accession = names(fst),
                          sequence = fst,
+                         width = BiocGenerics::width(fst),
                          row.names = NULL,
                          check.names = FALSE)
 
@@ -222,17 +195,23 @@ map_peptides_to_fasta <- function (peptides,
   parallel::stopCluster(cl)
 
   out <- unlist(out, recursive = FALSE)
-  out <- rbindlist(out)
+
+  return (rbindlist(out))
 
 }
 
+# @author Michael Nestor
+#
 find_matching_accessions <- function (peptides, fasta.df) {
   lapply(peptides, function (peptide) {
     fasta.df %>%
       dplyr::mutate(is_match = grepl(peptide, sequence)) %>%
       dplyr::filter(is_match) %>%
-      dplyr::mutate(cleanSeq = peptide) %>%
-      dplyr::select(cleanSeq, accession, -sequence, -is_match)
+      dplyr::mutate(cleanSeq = peptide,
+                    protLength = width,
+                    firstAA = stringr::str_locate(sequence, cleanSeq)[, 1],
+                    lastAA = stringr::str_locate(sequence, cleanSeq)[, 2]) %>%
+      dplyr::select(cleanSeq, accession, protLength, firstAA, lastAA)
   })
 }
 
