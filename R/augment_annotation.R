@@ -56,6 +56,10 @@ augment_annotation <- function (x,
   # either sp or tr).
   fst_norm <- fst_both[grepl("^(sp|tr)", fst_both@ranges@NAMES)]
 
+  # Extract all entries for scrambled proteins (proteins whose names start with
+  # DECOY).
+  fst_decoy <- fst_both[grepl("^DECOY", fst_both@ranges@NAMES)]
+
   # Augment annotation: normal -------------------------------------------------
 
   # Augment the normal data frame. This will search all three normal data bases
@@ -115,34 +119,66 @@ augment_annotation <- function (x,
       percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
     )
 
-  # Augment annotation: decoy/scrambled ----------------------------------------
+  # Augment annotation: decoy --------------------------------------------------
 
-  # Augment the decoy data frame. Most of the variables included in the normal
-  # data frame are not necessary in the decoy data frame because the decoy rows
-  # will be deleted in the FDR control step.
+  # Augment the decoy data frame.
   x_decoy <- x %>%
     dplyr::filter(isDecoy) %>%
     dplyr::mutate(
-      cleanSeq = NA,
-      AccMap = NA,
-      UniProtAcc = NA,
-      protLength = NA,
-      firstAA = NA,
-      lastAA = NA,
-      AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
-                                       `Protein accession`) ~ "VarSplic",
-                                 grepl("^(DECOY_)?tr.*",
-                                       `Protein accession`) ~ "TrEMBL",
-                                 grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
-                                       `Protein accession`) ~ "SwissProt",
-                                 TRUE ~ NA_character_),
-      percentCoverage = NA
+      cleanSeq = gsub("\\[.+?\\]", "", Proteoform),
+      cleanSeq = gsub("\\(|\\)", "", cleanSeq),
+      cleanSeq = sub("^[A-Z]?\\.(.*)\\.[A-Z]?", "\\1", cleanSeq)
     )
 
-  # Combine the normal and decoy proteins.
-  x <- rbind(x_norm, x_decoy)
+  # Extract all unique clean sequences. This vector will be used to find all
+  # matching UniProt accessions for each sequence.
+  peptides <- unique(x_decoy$cleanSeq)
 
-  return (x)
+  # Find all matching UniProt accessions for each clean sequence.
+  augmented <- map_peptides_to_fasta(peptides,
+                                     fst_decoy) %>%
+    dplyr::mutate(
+      AnnType2 = dplyr::case_when(
+        grepl("sp\\|", accession) ~ "SwissProt",
+        grepl("tr\\|", accession) ~ "TrEMBL"
+      )
+    ) %>%
+    dplyr::group_by(cleanSeq, AnnType2) %>%
+    dplyr::add_count(name = "AccMap") %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-AnnType2)
+
+  # Add the UniProtAcc and AnnType variables using the accession variable.
+  x_decoy <- dplyr::inner_join(x_decoy, augmented) %>%
+    dplyr::mutate(
+      UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession),
+      AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
+                                       accession) ~ "VarSplic",
+                                 grepl("^(DECOY_)?tr.*",
+                                       accession) ~ "TrEMBL",
+                                 grepl("^(DECOY_)?sp\\|[^-]*\\|.*",
+                                       accession) ~ "SwissProt",
+                                 TRUE ~ NA_character_)
+    ) %>%
+    dplyr::select(-accession)
+
+  # Create the protLength, firstAA, and lastAA variables.
+  acc_info <- add_acc_info(data = x_decoy,
+                           fst = fst_decoy)
+
+  # Add the variables created in the acc_info object to the x_decoy object.
+  x_decoy <- dplyr::inner_join(x = x_decoy,
+                               y = acc_info)
+
+  # Add AnnType and percentCoverage (the percentage each observed amino
+  # acid sequence matches the reference amino acid sequence) to x_decoy.
+  x_decoy <- x_decoy %>%
+    dplyr::mutate(
+      percentCoverage = signif(100 * (lastAA - firstAA + 1) / protLength, 2)
+    )
+
+  # Combine the normal and decoy data tables and return the combined table.
+  return (rbind(x_norm, x_decoy))
 
 }
 
