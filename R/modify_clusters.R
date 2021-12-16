@@ -34,8 +34,7 @@ create_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
     dplyr::filter(cluster != 0) %>%
     dplyr::group_by(Gene) %>%
     dplyr::mutate(
-      pcGroup = groupate(x = .,
-                         gene = Gene[[1]],
+      pcGroup = groupate(x = dplyr::across(),
                          ppm_cutoff = ppm_cutoff,
                          n_Da = n_Da,
                          rt_sd = errors$rt_sd,
@@ -47,7 +46,7 @@ create_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
 # @author Evan A Martin
 # This function will carry out the bulk of the calculations (sorting, grouping,
 # creating group numbers, ...)
-groupate <- function (x, gene, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {
+groupate <- function (x, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {
 
   c12c13 <- 1.0033548378
 
@@ -73,9 +72,10 @@ groupate <- function (x, gene, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {
   # These rows represent clusters that can be combined with the current cluster
   # (in metroid).
 
-  # Extract all rows corresponding to a given gene.
+  # Determine the size of each cluster. This will be used to combine clusters
+  # (smaller clusters are added to larger clusters). Calculate the mass/rt
+  # centroid.
   ridley <- x %>%
-    dplyr::filter(Gene == gene) %>%
     dplyr::group_by(cluster) %>%
     dplyr::summarize(n_members = dplyr::n(),
                      cntr_mass = median(RecalMass, na.rm = TRUE),
@@ -173,10 +173,9 @@ groupate <- function (x, gene, ppm_cutoff, n_Da, rt_sd, n_rt_sd) {
   # Join the data input data frame with samus so the output will be the same
   # length as the input.
   suppressMessages(
-    da_end <- x %>%
-      dplyr::filter(Gene == gene) %>%
-      dplyr::inner_join(x = .,
-                        y = dplyr::select(samus, cluster, pcg))
+    da_end <- dplyr::inner_join(x = x,
+                                y = dplyr::select(samus, cluster, pcg))
+
   )
 
   return (da_end$pcg)
