@@ -23,11 +23,11 @@ find_ref_ds <- function (x) {
   # Group the data by data set and count the number of unique proteoforms for
   # each data set. Select the data set that has the highest number of unique
   # proteoforms.
-  ref_ds <- x %>%
-    dplyr::group_by(Dataset) %>%
-    dplyr::summarize(n_pfs = dplyr::n_distinct(Proteoform)) %>%
-    dplyr::slice_max(n_pfs) %>%
-    dplyr::pull(Dataset)
+  return (x %>%
+            dplyr::group_by(Dataset) %>%
+            dplyr::summarize(n_pfs = dplyr::n_distinct(Proteoform)) %>%
+            dplyr::slice_max(n_pfs) %>%
+            dplyr::pull(Dataset))
 
 }
 

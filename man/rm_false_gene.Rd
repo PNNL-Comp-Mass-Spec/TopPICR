@@ -13,8 +13,10 @@ rm_false_gene(x)
 A \code{data.table}.
 }
 \description{
-...
+A given feature can occur in multiple genes. This function selects a single
+gene for each feature. The gene with the minimum E-value is kept and all
+other genes are removed.
 }
 \author{
-Vlad Petyuk, Evan A Martin
+Vlad Petyuk
 }

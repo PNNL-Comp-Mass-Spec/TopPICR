@@ -1,6 +1,8 @@
 #' Select one gene per feature
 #'
-#' ...
+#' A given feature can occur in multiple genes. This function selects a single
+#' gene for each feature. The gene with the minimum E-value is kept and all
+#' other genes are removed.
 #'
 #' @param x A \code{data.table} output from the \code{read_toppic} function.
 #'
@@ -8,7 +10,7 @@
 #'
 #' @importFrom magrittr %>%
 #'
-#' @author Vlad Petyuk, Evan A Martin
+#' @author Vlad Petyuk
 #'
 #' @export
 #'
@@ -19,7 +21,7 @@ rm_false_gene <- function (x) {
                   Gene, `E-value`) %>%
     dplyr::distinct() %>%
     dplyr::group_by(Dataset, CV, `Feature apex`, `Feature intensity`) %>%
-    dplyr::slice(which.min(`E-value`)) %>%
+    dplyr::slice_min(`E-value`) %>%
     dplyr::ungroup() %>%
     dplyr::select(Dataset, CV, `Feature apex`, `Feature intensity`, Gene)
 
