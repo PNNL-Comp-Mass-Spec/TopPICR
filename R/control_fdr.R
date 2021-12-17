@@ -20,7 +20,7 @@
 #'
 #' @export
 #'
-eval_cutoff <- function (x, fdr_threshold) {
+find_evalue_cutoff <- function (x, fdr_threshold) {
 
   # Create a character vector of annotation types.
   anns <- unique(x$AnnType)
@@ -29,6 +29,69 @@ eval_cutoff <- function (x, fdr_threshold) {
   e_vals <- sapply(anns, find_cutoff, x = x, fdr_threshold = fdr_threshold)
 
   return (e_vals)
+
+}
+
+#' Compute the FDR
+#'
+#' Computes the FDR at the PrSM, sequence, proteoform, accession, and gene
+#' levels.
+#'
+#' @param x A \code{data.table} that contains decoy proteins.
+#'
+#' @return A named vector with the FDR at the PrSM, sequence, proteoform,
+#'   accession, and gene levels. The FDR values for each level are also printed
+#'   when the function is called.
+#'
+#' @author Evan A Martin
+#'
+#' @export
+#'
+compute_fdr <- function (x) {
+
+  fdr_prsm <- x %>%
+    dplyr::distinct(Dataset, `Scan(s)`, isDecoy) %>%
+    dplyr::pull(isDecoy) %>%
+    # Mean of a logical vector gives the proportion of TRUE values.
+    mean()
+
+  fdr_cleanseq <- x %>%
+    dplyr::distinct(cleanSeq, isDecoy) %>%
+    dplyr::pull(isDecoy) %>%
+    # Mean of a logical vector gives the proportion of TRUE values.
+    mean()
+
+  fdr_proteoform <- x %>%
+    dplyr::distinct(Proteoform, isDecoy) %>%
+    dplyr::pull(isDecoy) %>%
+    # Mean of a logical vector gives the proportion of TRUE values.
+    mean()
+
+  fdr_accession <- x %>%
+    dplyr::distinct(UniProtAcc, isDecoy) %>%
+    dplyr::pull(isDecoy) %>%
+    # Mean of a logical vector gives the proportion of TRUE values.
+    mean()
+
+  fdr_gene <- x %>%
+    dplyr::distinct(Gene, isDecoy) %>%
+    dplyr::pull(isDecoy) %>%
+    # Mean of a logical vector gives the proportion of TRUE values.
+    mean()
+
+  # Print the output then return a vector containing the FDR values.
+  cat("PrSM level FDR: ", fdr_prsm, "\n",
+      "Sequence level FDR: ", fdr_cleanseq, "\n",
+      "Proteoform level FDR: ", fdr_proteoform, "\n",
+      "UniProt accession level FDR: ", fdr_accession, "\n",
+      "Gene level FDR: ", fdr_gene, "\n",
+      sep = "")
+
+  x <- c(PrSM = fdr_prsm,
+         cleanSeq = fdr_cleanseq,
+         Proteoform = fdr_proteoform,
+         UniProtAcc = fdr_accession,
+         Gene = fdr_gene)
 
 }
 
@@ -60,11 +123,13 @@ eval_cutoff <- function (x, fdr_threshold) {
 #'
 #' @md
 #'
+#' @author Evan A Martin
+#'
 #' @importFrom magrittr %>%
 #'
 #' @export
 #'
-control_fdr <- function (x, e_vals) {
+apply_evalue_cutoff <- function (x, e_vals) {
 
   # Create a character vector of annotation types.
   anns <- unique(x$AnnType)
@@ -75,9 +140,7 @@ control_fdr <- function (x, e_vals) {
   x <- x %>%
     dplyr::filter((AnnType == anns[[1]] & `E-value` <= e_vals[[1]]) |
                     (AnnType == anns[[2]] & `E-value` <= e_vals[[2]]) |
-                    (AnnType == anns[[3]] & `E-value` <= e_vals[[3]])) %>%
-    dplyr::filter(!isDecoy) %>%
-    dplyr::select(-isDecoy)
+                    (AnnType == anns[[3]] & `E-value` <= e_vals[[3]]))
 
   return (x)
 
@@ -103,8 +166,8 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
   # the FDR for the minimum value is larger than the threshold throw an error
   # because the FDR can never be below the threshold. If the FDR for the maximum
   # value is already below the threshold no filtering needs to occur.
-  min_fdr <- compute_fdr(eval_cutoff = mini, x = x_filtered)
-  max_fdr <- compute_fdr(eval_cutoff = maxi, x = x_filtered)
+  min_fdr <- calc_fdr(eval_cutoff = mini, x = x_filtered)
+  max_fdr <- calc_fdr(eval_cutoff = maxi, x = x_filtered)
 
 
   # Check the FDR for the minimum E-value. If it is larger than the cutoff
@@ -156,7 +219,7 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
     # Compute the FDR for each E-value in the summary. This vector will be used
     # to further subset the E-value vector until it finds the largest E-value
     # that produces an FDR below the specified threshold.
-    fdrs <- sapply(summary_evals, compute_fdr, x = x_filtered)
+    fdrs <- sapply(summary_evals, calc_fdr, x = x_filtered)
 
     # Find which FDR values are above the FDR threshold. The smallest value in
     # this vector corresponds to the index of the E-value in summary_evals that
@@ -189,7 +252,7 @@ find_cutoff <- function (x, ann_type, fdr_threshold) {
 }
 
 # @author Evan A Martin
-compute_fdr <- function (eval_cutoff, x) {
+calc_fdr <- function (eval_cutoff, x) {
 
   fdr <- x %>%
     dplyr::filter(`E-value` <= eval_cutoff) %>%
@@ -197,5 +260,31 @@ compute_fdr <- function (eval_cutoff, x) {
     dplyr::pull(isDecoy) %>%
     # Mean of a logical vector gives the proportion of TRUE values.
     mean()
+
+}
+
+# Post FDR control functions ---------------------------------------------------
+
+#' Remove decoy proteins
+#'
+#' This function filters out the decoy proteins and also removes the
+#' \code{isDecoy} variable.
+#'
+#' @param x A \code{data.table} that contains decoy proteins. This function
+#'   should be called after \code{apply_evalue_cutoff} and before the
+#'   \code{align_rt} function.
+#'
+#' @return A \code{data.table} with the rows containing decoy proteins and the
+#'   \code{isDecoy} column removed.
+#'
+#' @author Evan A Martin
+#'
+#' @export
+#'
+remove_decoys <- function (x) {
+
+  return (x %>%
+            dplyr::filter(!isDecoy) %>%
+            dplyr::select(-isDecoy))
 
 }
