@@ -10,9 +10,10 @@ compute_fdr(x)
 \item{x}{A \code{data.table} that contains decoy proteins.}
 }
 \value{
-A named vector with the FDR at the PrSM, sequence, proteoform,
-accession, and gene levels. The FDR values for each level are also printed
-when the function is called.
+A list containing the FDR and counts at the PrSM, sequence,
+proteoform, accession, and gene levels. The FDR values and counts for each
+level are also printed when the function is called. All FDR values are
+reported as percentages.
 }
 \description{
 Computes the FDR at the PrSM, sequence, proteoform, accession, and gene

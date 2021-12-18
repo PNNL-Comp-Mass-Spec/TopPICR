@@ -39,9 +39,10 @@ find_evalue_cutoff <- function (x, fdr_threshold) {
 #'
 #' @param x A \code{data.table} that contains decoy proteins.
 #'
-#' @return A named vector with the FDR at the PrSM, sequence, proteoform,
-#'   accession, and gene levels. The FDR values for each level are also printed
-#'   when the function is called.
+#' @return A list containing the FDR and counts at the PrSM, sequence,
+#'   proteoform, accession, and gene levels. The FDR values and counts for each
+#'   level are also printed when the function is called. All FDR values are
+#'   reported as percentages.
 #'
 #' @author Evan A Martin
 #'
@@ -49,49 +50,54 @@ find_evalue_cutoff <- function (x, fdr_threshold) {
 #'
 compute_fdr <- function (x) {
 
-  fdr_prsm <- x %>%
+  prsm <- x %>%
     dplyr::distinct(Dataset, `Scan(s)`, isDecoy) %>%
-    dplyr::pull(isDecoy) %>%
-    # Mean of a logical vector gives the proportion of TRUE values.
-    mean()
+    dplyr::summarize(fdr = mean(isDecoy),
+                     count = sum(!isDecoy))
 
-  fdr_cleanseq <- x %>%
-    dplyr::distinct(cleanSeq, isDecoy) %>%
-    dplyr::pull(isDecoy) %>%
-    # Mean of a logical vector gives the proportion of TRUE values.
-    mean()
-
-  fdr_proteoform <- x %>%
+  proteoform <- x %>%
     dplyr::distinct(Proteoform, isDecoy) %>%
-    dplyr::pull(isDecoy) %>%
-    # Mean of a logical vector gives the proportion of TRUE values.
-    mean()
+    dplyr::summarize(fdr = mean(isDecoy),
+                     count = sum(!isDecoy))
 
-  fdr_accession <- x %>%
+  cleanseq <- x %>%
+    dplyr::distinct(cleanSeq, isDecoy) %>%
+    dplyr::summarize(fdr = mean(isDecoy),
+                     count = sum(!isDecoy))
+
+  accession <- x %>%
     dplyr::distinct(UniProtAcc, isDecoy) %>%
-    dplyr::pull(isDecoy) %>%
-    # Mean of a logical vector gives the proportion of TRUE values.
-    mean()
+    dplyr::summarize(fdr = mean(isDecoy),
+                     count = sum(!isDecoy))
 
-  fdr_gene <- x %>%
+  gene <- x %>%
     dplyr::distinct(Gene, isDecoy) %>%
-    dplyr::pull(isDecoy) %>%
-    # Mean of a logical vector gives the proportion of TRUE values.
-    mean()
+    dplyr::summarize(fdr = mean(isDecoy),
+                     count = sum(!isDecoy))
 
   # Print the output then return a vector containing the FDR values.
-  cat("PrSM level FDR: ", fdr_prsm, "\n",
-      "Sequence level FDR: ", fdr_cleanseq, "\n",
-      "Proteoform level FDR: ", fdr_proteoform, "\n",
-      "UniProt accession level FDR: ", fdr_accession, "\n",
-      "Gene level FDR: ", fdr_gene, "\n",
+  cat("PrSM level FDR: ", round(prsm$fdr * 100, 3), "% \n",
+      "Number of unique PrSMs: ", prsm$count, "\n\n",
+
+      "Proteoform level FDR: ", round(proteoform$fdr * 100, 3), "% \n",
+      "Number of unique Proteoforms: ", proteoform$count, "\n\n",
+
+      "Sequence level FDR: ", round(cleanseq$fdr * 100, 3), "% \n",
+      "Number of unique Sequences: ", cleanseq$count, "\n\n",
+
+      "UniProt accession level FDR: ", round(accession$fdr * 100, 3), "% \n",
+      "Number of unique UniProt accessions: ", accession$count, "\n\n",
+
+      "Gene level FDR: ", round(gene$fdr * 100, 3), "% \n",
+      "Number of unique genes: ", gene$count, "\n",
+
       sep = "")
 
-  x <- c(PrSM = fdr_prsm,
-         cleanSeq = fdr_cleanseq,
-         Proteoform = fdr_proteoform,
-         UniProtAcc = fdr_accession,
-         Gene = fdr_gene)
+  x <- list(PrSM = c(round(prsm$fdr * 100, 3), prsm$count),
+            Proteoform = c(round(proteoform$fdr * 100, 3), proteoform$count),
+            cleanSeq = c(round(cleanseq$fdr * 100, 3), cleanseq$count),
+            UniProtAcc = c(round(accession$fdr * 100, 3), accession$count),
+            Gene = c(round(gene$fdr * 100, 3), gene$count))
 
 }
 
