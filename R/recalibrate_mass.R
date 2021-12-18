@@ -132,3 +132,53 @@ recalibrate_mass <- function (x, errors, var_name) {
   )
 
 }
+
+# calc_error auxiliary functions -----------------------------------------------
+
+# @author Evan A Martin
+# rt: A vector of retention times grouped by Dataset.
+# pf: A vector of proteoforms grouped by Dataset.
+# fi: A vector of feature intensity values. These values are grouped by Dataset.
+# fa: A vector of feature apex values. These values are grouped by Dataset.
+# x_ref: the x data matrix filtered by the reference data set.
+calc_rt_stats <- function (rt, pf, fi, fa, x_ref) {
+
+  # Combine the reference data set along with the data subsetted by the group_by
+  # function by Dataset.
+  rt_error <- dplyr::inner_join(
+    x = x_ref %>%
+      dplyr::group_by(Proteoform) %>%
+      dplyr::slice_max(`Feature intensity`) %>%
+      # Remove rows where the max `Feature intensity` appears in more than one
+      # row by selecting the min `Feature apex` value.
+      dplyr::slice_min(`Feature apex`) %>%
+      dplyr::select(RTalign, Proteoform) %>%
+      # We only want to keep one row with the repMass value for each Proteoform.
+      # When joining with the non-reference data set the number of rows is
+      # inflated because the join function creates a row for each combination of
+      # values that differ between the two data sets.
+      dplyr::distinct(),
+    y = tibble::tibble(RTalign = rt,
+                       Proteoform = pf,
+                       `Feature intensity` = fi,
+                       `Feature apex` = fa) %>%
+      dplyr::group_by(Proteoform) %>%
+      dplyr::slice_max(`Feature intensity`) %>%
+      # Remove rows where the max `Feature intensity` appears in more than one
+      # row by selecting the min `Feature apex` value.
+      dplyr::slice_min(`Feature apex`) %>%
+      dplyr::select(RTalign, Proteoform) %>%
+      # We only want to keep one row with the repMass value for each Proteoform.
+      # When joining with the non-reference data set the number of rows is
+      # inflated because the join function creates a row for each combination of
+      # values that differ between the two data sets.
+      dplyr::distinct(),
+    by = "Proteoform"
+  ) %>%
+    # Calculate the median absolute deviation of the rt errors.
+    dplyr::mutate(error = RTalign.y - RTalign.x) %>%
+    dplyr::pull(error)
+
+  return (stats::mad(rt_error))
+
+}
