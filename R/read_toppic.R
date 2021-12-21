@@ -11,21 +11,28 @@
 #'   the TopPIC output files.
 #'
 #' @param file_name A character vector of file names containing the files output
-#'   from TopPIC. The output from these files will be combined into one data
-#'   frame.
+#'   from TopPIC. The output from these files will be combined into one
+#'   \code{data.table}. Currently this function can read in data from either
+#'   ms2_toppic_prsm.tsv files or ms1.feature files. When reading in data all
+#'   files must be the same type (e.g., ms2_toppic_prsm.tsv).
 #'
-#' @param ... Additional arguments to the \code{read.delim} function.
+#' @param faims Logical. If true the data contain multiple FAIMS compensation
+#'   voltages (CVs).
+#'
+#' @param ... Additional arguments to \code{\link[readr]{read_tsv}}.
 #'
 #' @return A data.table where all the data from the input files are combined
-#'   row wise. The following variables have been added/removed:
+#'   row wise. When PrSM data is the input, the following variables are
+#'   added/removed:
 #'
 #'   | Added             | Removed                    |
 #'   | ----------------- | -------------------------- |
+#'   | `Dataset`         | `Data file name`           |
 #'   | `mz`              | `Prsm ID`                  |
 #'   | `Gene`            | `Spectrum ID`              |
 #'   | `isDecoy`         | `Fragmentation`            |
-#'   | `Dataset`         | `#peaks`                   |
-#'   | `CV`              | `Proteoform ID`            |
+#'   | `CV` (if FAIMS)   | `#peaks`                   |
+#'   |                   | `Proteoform ID`            |
 #'   |                   | `Feature score`            |
 #'   |                   | `First residue`            |
 #'   |                   | `Last residue`             |
@@ -35,72 +42,116 @@
 #'   |                   | `Spectrum-level Q-value`   |
 #'   |                   | `Proteoform-level Q-value` |
 #'
+#'   When unidentified (MS2) data is the input, the the following variables are
+#'   added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   | `Dataset`         | `Sample_ID`                |
+#'   | `CV` (if FAIMS)   | `Minimum_fraction_id`      |
+#'   |                   | `Maximum_fraction_id`      |
+#'
 #' @md
 #'
 #' @author Evan A Martin
 #'
 #' @export
 #'
-read_toppic <- function (file_path, file_name, ...) {
-
-  # Read in the data from TopPIC files -----------------------------------------
+read_toppic <- function (file_path, file_name, faims, ...) {
 
   # Create a list that will be used to hold the data from each file.
   the_list <- vector(mode = "list",
                      length = length(file_name))
 
-  # Loop through each file name and read the file into R.
-  for (e in 1:length(file_name)) {
+  # Determine whether the data are MS1 or MS2 files and read the data in
+  # accordingly.
+  if (str_detect(file_name[[1]], "ms1.feature")) {
 
-    # Find the number of lines preceding the header.
-    the_lines <- system(paste("grep -n '^\\*' ",
-                              file_path,
-                              file_name[[e]],
-                              sep = ""),
-                        intern = TRUE)
-    n_lines <- length(the_lines)
-    n_prelim <- as.numeric(gsub("[^{0-9}]*", "", the_lines[[n_lines]]))
+    # Loop through each MS1 file and read it into R.
+    for (e in 1:length(file_name)) {
 
-    # Read in the data skipping the lines preceding the header.
-    the_list[[e]] <- read.delim(file = paste0(file_path, file_name[[e]]),
-                                skip = n_prelim,
-                                ...)
+      # The ms1.feature files can be read directly into R with the read_table
+      # function from the readr package. Add the Dataset variable which is the
+      # name of the file that was just read in. It will also be modified
+      # ("_ms1.feature" is removed) to match the format of Dataset from the PrSM
+      # data.
+      the_list[[e]] <- readr::read_table(
+        file.path(file_path, file_name[[e]])
+      ) %>%
+        # Create the data set name from the file name.
+        dplyr::mutate(
+          Dataset = file_name[[e]],
+          Dataset = stringr::str_remove(Dataset, "_ms1.feature")
+        )
+
+    }
+
+  } else {
+
+    # Loop through each PrSM (MS2) file, find and ignore all metadata rows, and
+    # read the data rows into R.
+    for (e in 1:length(file_name)) {
+
+      # Find the number of lines preceding the header.
+      the_lines <- system(paste("grep -n '^\\*' ",
+                                file_path,
+                                file_name[[e]],
+                                sep = ""),
+                          intern = TRUE)
+      n_lines <- length(the_lines)
+      n_prelim <- as.numeric(gsub("[^{0-9}]*", "", the_lines[[n_lines]]))
+
+      # Read in the data skipping the lines preceding the header.
+      the_list[[e]] <- readr::read_tsv(
+        file = file.path(file_path, file_name[[e]]),
+        skip = n_prelim,
+        ...
+      ) %>%
+        dplyr::mutate(
+          Dataset = stringr::str_remove(`Data file name`, "_ms2.msalign"),
+          Dataset = sapply(str_split(Dataset, "/"), tail, 1),
+          mz = (`Precursor mass` + Charge * 1.007276466621) / Charge,
+          Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`),
+          isDecoy = grepl("^DECOY", `Protein accession`)
+        ) %>%
+        dplyr::filter(grepl("GN=", `Protein description`))
+
+    }
 
   }
 
   # Combine data from all files.
   x <- rbindlist(the_list)
 
-  # Filter data and include additional variables -------------------------------
+  # Include CV variable if working with FAIMS data.
+  if (faims) {
+
+    x <- x %>%
+      dplyr::mutate(
+        CV = sapply(str_split(Dataset, "_"), tail, 1),
+        # Remove the CV information from the Dataset variable. If we don't do
+        # this we will always be grouping by CV anytime we group by Dataset.
+        Dataset = str_replace(Dataset, "_[0-9]*$", "")
+      )
+
+  }
 
   # Create a character vector of variables that are not needed at any point in
   # the top down workflow. They will be removed with dplyr::any_of. The function
   # will not throw an error if any of the variables listed are not present in
   # the data set.
-  useless <- c("Prsm ID", "Spectrum ID", "Fragmentation",
-               "#peaks", "Proteoform ID", "Feature score",
-               "#variable PTMs", "#matched peaks", "#matched fragment ions",
-               "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
-               "Last residue", "Spectrum-level Q-value",
-               "Proteoform-level Q-value", "First residue", "Last residue")
+  useless <- c(
+    # Identified feature variables:
+    "Data file name", "Prsm ID", "Spectrum ID", "Fragmentation",
+    "#peaks", "Proteoform ID", "Feature score",
+    "#variable PTMs", "#matched peaks", "#matched fragment ions",
+    "Q-value (spectral FDR)", "Proteoform FDR", "First residue",
+    "Last residue", "Spectrum-level Q-value",
+    "Proteoform-level Q-value", "First residue", "Last residue",
+    # Unidentified feature variables:
+    "Sample_ID", "Minimum_fraction_id", "Maximum_fraction_id"
+  )
 
-  x <- x %>%
-    # Filter data based on protein accession and description variables.
-    dplyr::filter(grepl("GN=", `Protein description`)) %>%
-    # Add useful variables.
-    dplyr::mutate(
-      mz = (`Precursor mass` + Charge * 1.007276466621) / Charge,
-      Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`),
-      isDecoy = grepl("^DECOY", `Protein accession`),
-      Dataset = stringr::str_remove(`Data file name`, "_ms2.msalign"),
-      # Extract the CV information (if it exists).
-      CV = stringr::str_extract(Dataset, "[mp][0-9]*CV"),
-      # Remove the CV information from Dataset (if it exists).
-      Dataset = stringr::str_remove(Dataset, "[mp][0-9]*CV")
-    ) %>%
-  # Remove not so useful variables.
-  dplyr::select(-dplyr::any_of(useless))
-
-  return (x)
+  return (dplyr::select(x, -dplyr::any_of(useless)))
 
 }

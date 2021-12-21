@@ -4,27 +4,34 @@
 \alias{read_toppic}
 \title{Read in TopPIC files}
 \usage{
-read_toppic(file_path, file_name, ...)
+read_toppic(file_path, file_name, faims, ...)
 }
 \arguments{
 \item{file_path}{A character string specifying the path to the folder with
 the TopPIC output files.}
 
 \item{file_name}{A character vector of file names containing the files output
-from TopPIC. The output from these files will be combined into one data
-frame.}
+from TopPIC. The output from these files will be combined into one
+\code{data.table}. Currently this function can read in data from either
+ms2_toppic_prsm.tsv files or ms1.feature files. When reading in data all
+files must be the same type (e.g., ms2_toppic_prsm.tsv).}
 
-\item{...}{Additional arguments to the \code{read.delim} function.}
+\item{faims}{Logical. If true the data contain multiple FAIMS compensation
+voltages (CVs).}
+
+\item{...}{Additional arguments to \code{\link[readr]{read_tsv}}.}
 }
 \value{
 A data.table where all the data from the input files are combined
-row wise. The following variables have been added/removed:\tabular{ll}{
+row wise. When PrSM data is the input, the following variables are
+added/removed:\tabular{ll}{
    Added \tab Removed \cr
+   \code{Dataset} \tab \verb{Data file name} \cr
    \code{mz} \tab \verb{Prsm ID} \cr
    \code{Gene} \tab \verb{Spectrum ID} \cr
    \code{isDecoy} \tab \code{Fragmentation} \cr
-   \code{Dataset} \tab \verb{#peaks} \cr
-   \code{CV} \tab \verb{Proteoform ID} \cr
+   \code{CV} (if FAIMS) \tab \verb{#peaks} \cr
+    \tab \verb{Proteoform ID} \cr
     \tab \verb{Feature score} \cr
     \tab \verb{First residue} \cr
     \tab \verb{Last residue} \cr
@@ -33,6 +40,15 @@ row wise. The following variables have been added/removed:\tabular{ll}{
     \tab \verb{#matched fragment ions} \cr
     \tab \verb{Spectrum-level Q-value} \cr
     \tab \verb{Proteoform-level Q-value} \cr
+}
+
+
+When unidentified (MS2) data is the input, the the following variables are
+added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{Dataset} \tab \code{Sample_ID} \cr
+   \code{CV} (if FAIMS) \tab \code{Minimum_fraction_id} \cr
+    \tab \code{Maximum_fraction_id} \cr
 }
 }
 \description{
