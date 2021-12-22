@@ -14,7 +14,8 @@
 #' @param threshold An integer. The value that will be used to remove rows whose
 #'   count falls below the threshold.
 #'
-#' @return
+#' @return A \code{data.table} where all rows containing proteoforms with counts
+#'   below the threshold are filtered out.
 #'
 #' @importFrom magrittr %>%
 #'

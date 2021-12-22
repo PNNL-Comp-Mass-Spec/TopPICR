@@ -4,7 +4,14 @@
 #' a feature metadata data frame. This data frame will be used at the end of the
 #' `TopPICR` pipeline when creating an `MSnSet` object.
 #'
-#' @param x A \code{data.table} output from the \code{mk_pcg} function.
+#' @param x A \code{data.table} output from the \code{create_pcg} function.
+#'
+#' @return A \code{data.table} with a row for each unique combination of `Gene`,
+#'   `pcGroup`, and `Proteoform`. The `collision` variable indicates which
+#'   clusters have the same centroid across multiple genes. The
+#'   \code{data.table} also contains other proteoform information such as
+#'   protein length, UniProt accession, and first and last amino acid among
+#'   others.
 #'
 #' @importFrom magrittr %>%
 #'
@@ -36,29 +43,10 @@ create_mdata <- function (x, cutoff_ppm, cutoff_rt) {
 
 }
 
-# Create gene/cluster combinations. These could contain clusters from two
-# different genes.
-
-#' Find clusters across genes with same centroid
-#'
-#' Finds clusters clusters with the same centroid (or are within the
-#' specified mass/retention time threshold) but the genes of the two clusters
-#' are different and marks them as colliding genes.
-#'
-#' @param x ...
-#'
-#' @param cutoff_ppm ...
-#'
-#' @param cutoff_rt ...
-#'
-#' @return ...
-#'
-#' @importFrom magrittr %>%
-#'
-#' @author Evan A Martin
-#'
-#' @export
-#'
+# Finds clusters with the same centroid (or are within the specified
+# mass/retention time threshold) but the genes of the two clusters are different
+# and marks them as colliding genes.
+# @author Evan A Martin
 find_collider <- function (x, cutoff_ppm, cutoff_rt) {
 
   # Keep only unique Gene/cluster combinations (excluding the 0 cluster).

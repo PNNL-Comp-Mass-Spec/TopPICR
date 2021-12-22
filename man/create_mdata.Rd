@@ -7,7 +7,15 @@
 create_mdata(x, cutoff_ppm, cutoff_rt)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{mk_pcg} function.}
+\item{x}{A \code{data.table} output from the \code{create_pcg} function.}
+}
+\value{
+A \code{data.table} with a row for each unique combination of \code{Gene},
+\code{pcGroup}, and \code{Proteoform}. The \code{collision} variable indicates which
+clusters have the same centroid across multiple genes. The
+\code{data.table} also contains other proteoform information such as
+protein length, UniProt accession, and first and last amino acid among
+others.
 }
 \description{
 This function uses the information from the identified feature data to create

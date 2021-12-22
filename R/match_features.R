@@ -1,6 +1,9 @@
 #' Extract feature intensity values from unidentified feature data
 #'
-#' ...
+#' Matches unidentified feature intensities with identified feature clusters.
+#' The mass and retention time of each unidentified feature is compared to the
+#' centroid of each identified cluster. If the unidentified feature falls within
+#' the specified ppm threshold it is added to the cluster.
 #'
 #' @param ms2 A \code{data.table} containing the identified feature data.
 #'
@@ -24,6 +27,8 @@
 #'
 #' @return A \code{data.table} containing all unidentified features that fall
 #'   within the threshold of an identified feature gene/cluster combination.
+#'
+#' @importFrom foreach `%dopar%`
 #'
 #' @author Evan A Martin
 #'

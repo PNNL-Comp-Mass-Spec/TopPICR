@@ -32,7 +32,10 @@ A \code{data.table} containing all unidentified features that fall
 within the threshold of an identified feature gene/cluster combination.
 }
 \description{
-...
+Matches unidentified feature intensities with identified feature clusters.
+The mass and retention time of each unidentified feature is compared to the
+centroid of each identified cluster. If the unidentified feature falls within
+the specified ppm threshold it is added to the cluster.
 }
 \author{
 Evan A Martin

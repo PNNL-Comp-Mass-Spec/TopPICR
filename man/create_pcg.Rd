@@ -7,15 +7,29 @@
 create_pcg(x, errors, ppm_cutoff, n_Da, n_rt_sd)
 }
 \arguments{
-\item{x}{...}
+\item{x}{A \code{data.table} output from the \code{cluster} function.}
 
-\item{errors}{...}
+\item{errors}{A \code{list} output from the \code{calc_error} function.}
 
-\item{ppm_cutoff}{...}
+\item{ppm_cutoff}{The threshold in ppm that will be used to determine if two
+clusters will be combined.}
 
-\item{n_Da}{...}
+\item{n_Da}{The number of Daltons used to create an envelope around a
+cluster's centroid in mass space. Any cluster whose centroid falls within
+this envelope will be included in the pool of clusters that could be
+combined.}
 
-\item{n_rt_sd}{...}
+\item{n_rt_sd}{The number of standard deviations used to create an envelope
+around a cluster's centroid in retention time space. Any cluster whose
+centroid falls within this envelope will be included in the pool of
+clusters that could be combined.}
+}
+\value{
+A \code{data.table} with the updated cluster assignment for each
+gene/cluster combination. The following variables have been added/removed:\tabular{ll}{
+   Added \tab Removed \cr
+   \code{pcGroup} \tab  \cr
+}
 }
 \description{
 Compares the centroid of each cluster within a gene and combines the two

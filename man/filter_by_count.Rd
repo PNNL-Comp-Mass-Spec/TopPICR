@@ -19,7 +19,8 @@ variable.}
 count falls below the threshold.}
 }
 \value{
-
+A \code{data.table} where all rows containing proteoforms with counts
+below the threshold are filtered out.
 }
 \description{
 Counts the number of samples each proteoform occurs in and filters out any

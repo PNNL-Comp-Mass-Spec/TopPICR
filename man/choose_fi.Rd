@@ -7,7 +7,7 @@
 choose_fi(x)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{collapse_pcg} function.}
+\item{x}{...}
 }
 \value{
 A \code{data.table} ...

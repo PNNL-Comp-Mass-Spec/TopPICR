@@ -12,15 +12,31 @@
 #' clusters if the centroids fall within the specified threshold. The clusters
 #' are combined by creating a new cluster membership variable \code{pcGroup}.
 #'
-#' @param x ...
+#' @param x A \code{data.table} output from the \code{cluster} function.
 #'
-#' @param errors ...
+#' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param ppm_cutoff ...
+#' @param ppm_cutoff The threshold in ppm that will be used to determine if two
+#'   clusters will be combined.
 #'
-#' @param n_Da ...
+#' @param n_Da The number of Daltons used to create an envelope around a
+#'   cluster's centroid in mass space. Any cluster whose centroid falls within
+#'   this envelope will be included in the pool of clusters that could be
+#'   combined.
 #'
-#' @param n_rt_sd ...
+#' @param n_rt_sd The number of standard deviations used to create an envelope
+#'   around a cluster's centroid in retention time space. Any cluster whose
+#'   centroid falls within this envelope will be included in the pool of
+#'   clusters that could be combined.
+#'
+#' @return A \code{data.table} with the updated cluster assignment for each
+#'   gene/cluster combination. The following variables have been added/removed:
+#'
+#'   | Added             | Removed                    |
+#'   | ----------------- | -------------------------- |
+#'   | `pcGroup`         |                            |
+#'
+#' @md
 #'
 #' @importFrom magrittr %>%
 #'
