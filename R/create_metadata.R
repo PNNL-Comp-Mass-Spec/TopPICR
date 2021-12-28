@@ -27,19 +27,41 @@ create_mdata <- function (x, cutoff_ppm, cutoff_rt) {
                                cutoff_rt = cutoff_rt)
 
   # Return the metadata data frame.
-  return (x_collision %>%
-            ungroup() %>%
-            group_by(Gene, pcGroup, Proteoform) %>%
-            mutate(n_pf = n(),
-                   rt = median(RTalign, na.rm = TRUE),
-                   mass = median(RecalMass, na.rm = TRUE)) %>%
-            ungroup() %>%
-            group_by(Gene, pcGroup) %>%
-            slice_max(n_pf) %>%
-            slice_min(`E-value`) %>%
-            ungroup() %>%
-            select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
-                   firstAA, lastAA, protLength, Proteoform))
+  return (
+    x_collision %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(
+        # First remove anything in square brackets that starts with a letter.
+        # The string in the square brackets may contain numbers, special
+        # characters, and letters (in that order) after the initial letter. For
+        # example, this will remove [Acetyl], [Plus1Oxy], and [NH3_Loss].
+        ModMass = stringr::str_remove_all(
+          Proteoform, "\\[[a-zA-Z]+[0-9]*.*?[a-zA-Z]*\\]"
+        ) %>%
+          # Remove all upper and lower case letters.
+          stringr::str_remove_all("[a-zA-Z]") %>%
+          # Remove beginning and ending periods.
+          stringr::str_remove_all("^\\.|\\.$") %>%
+          # Remove all parentheses and square brackets.
+          stringr::str_remove_all("\\(|\\)|\\[|\\]"),
+        ModMass = suppressWarnings(
+          round(as.numeric(ModMass), digits = 0)
+        )
+      ) %>%
+      dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass, MIScore) %>%
+      dplyr:: mutate(
+        n_pf = dplyr::n(),
+        rt = stats::median(RTalign, na.rm = TRUE),
+        mass = stats::median(RecalMass, na.rm = TRUE)
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::group_by(Gene, pcGroup) %>%
+      dplyr::slice_max(n_pf) %>%
+      dplyr::slice_min(`E-value`) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
+                    firstAA, lastAA, protLength, Proteoform)
+  )
 
 }
 
@@ -58,11 +80,11 @@ find_collider <- function (x, cutoff_ppm, cutoff_rt) {
     dplyr::mutate(
       gcc = paste(Gene, cluster, sep = "_"),
       collision = "-",
-      cntr_mass = median(RecalMass, na.rm = TRUE),
-      cntr_rt = median(RTalign, na.rm = TRUE)
+      cntr_mass = stats::median(RecalMass, na.rm = TRUE),
+      cntr_rt = stats::median(RTalign, na.rm = TRUE)
     ) %>%
-    dplyr:: distinct(Gene, cluster, collision, pcGroup,
-                     gcc, cntr_mass, cntr_rt) %>%
+    dplyr::distinct(Gene, cluster, collision, pcGroup,
+                    gcc, cntr_mass, cntr_rt) %>%
     dplyr::ungroup()
 
   # Nab the number of unique gccs. This will be used to keep track of which gccs
