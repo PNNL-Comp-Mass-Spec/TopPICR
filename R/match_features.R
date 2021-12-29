@@ -34,9 +34,10 @@
 #'
 #' @export
 #'
-match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff) {
+match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff,
+                           summary_fn = "max") {
 
-  centroids <- ms2 %>%
+  centroids_mass <- ms2 %>%
     # Remove the noise cluster. We don't want to impute feature intensity values
     # for it.
     dplyr::filter(cluster != 0) %>%
@@ -44,11 +45,25 @@ match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff) {
     # proteoform. We will calculate the centroid of the mass and retention time
     # for each proteoform. The centroids will be used to extract feature
     # intensity values from the unidentified feature data.
-    dplyr::group_by(Gene, cluster) %>%
-    # Calculate the mean RecalMass and mean RTalign which will be used as the
-    # centroid in finding like unidentified features.
-    dplyr::summarize(meanMass = mean(RecalMass, na.rm = TRUE),
-                     meanRT = mean(RTalign, na.rm = TRUE))
+    dplyr::group_by(Gene, cluster, pcGroup) %>%
+    # Calculate the median RecalMass which will be used as the centroid in
+    # finding like unidentified features.
+    dplyr::summarize(mediMass = stats::median(RecalMass, na.rm = TRUE))
+
+  centroids_rt <- ms2 %>%
+    # Remove the noise cluster. We don't want to impute feature intensity values
+    # for it.
+    dplyr::filter(cluster != 0) %>%
+    # Group by Gene and pcGroup to calculate the centroid for the retention
+    # time. The centroids will be used to extract feature intensity values from
+    # the unidentified feature data.
+    dplyr::group_by(Gene, pcGroup) %>%
+    # Calculate the median RTalign which will be used as the centroid in finding
+    # like unidentified features.
+    dplyr::summarize(mediRT = stats::median(RTalign, na.rm = TRUE))
+
+  centroids <- dplyr::inner_join(x = centroids_mass,
+                                 y = centroids_rt)
 
   # Prepare to run in parallel.
   cores <- parallel::detectCores() - 1
@@ -61,17 +76,18 @@ match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff) {
 
     features <- ms1 %>%
       dplyr::filter(
-        (1e6 * abs(RecalMass - centroids$meanMass[[e]]) /
-           centroids$meanMass[[e]]) < ppm_cutoff
+        (1e6 * abs(RecalMass - centroids$mediMass[[e]]) /
+           centroids$mediMass[[e]]) < ppm_cutoff
       ) %>%
       dplyr::filter(
-        abs(RTalign - centroids$meanRT[[e]]) < rt_cutoff
+        abs(RTalign - centroids$mediRT[[e]]) < rt_cutoff
       ) %>%
       dplyr::select(Dataset, Intensity, CV, Time_apex,
                     RTalign, RecalMass) %>%
       dplyr::mutate(
         Gene = centroids$Gene[[e]],
-        cluster = centroids$cluster[[e]]
+        cluster = centroids$cluster[[e]],
+        pcGroup = centroids$pcGroup[[e]]
       )
 
     # Using the foreach function with %dopar% will assign the last element
@@ -83,9 +99,19 @@ match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff) {
 
   parallel::stopCluster(cl)
 
+  # Create an object that points to the function that will be used to create a
+  # representative feature intensity value.
+  the_summary <- match.fun(summary_fn)
+
+  output <- data.table::rbindlist(unidentified) %>%
+    dplyr::group_by(Dataset, CV, Gene, cluster, pcGroup) %>%
+    dplyr::summarize(
+      Intensity = the_summary(Intensity, na.rm = TRUE)
+    )
+
   # Combine the list containing the Dataset, Intensity, CV, Gene, and cluster
   # variables for the unidentified features that are within the threshold of the
   # centroid.
-  return (data.table::rbindlist(unidentified))
+  return (output)
 
 }

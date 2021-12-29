@@ -4,7 +4,7 @@
 \alias{match_features}
 \title{Extract feature intensity values from unidentified feature data}
 \usage{
-match_features(ms2, ms1, ppm_cutoff, rt_cutoff)
+match_features(ms2, ms1, ppm_cutoff, rt_cutoff, summary_fn = "max")
 }
 \arguments{
 \item{ms2}{A \code{data.table} containing the identified feature data.}
