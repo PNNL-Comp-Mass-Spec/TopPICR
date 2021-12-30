@@ -35,17 +35,25 @@ combine_features <- function (ms2, ms1, summary_fn = "max") {
   # representative feature intensity value.
   the_summary <- match.fun(summary_fn)
 
-  fused <- dplyr::inner_join(
-    ms1,
-    dplyr::distinct(ms2, Gene, cluster, pcGroup)
-  ) %>%
+  ms2 <- ms2 %>%
+    dplyr::group_by(Dataset, CV, Gene, cluster, pcGroup) %>%
+    # Just want to keep the maximum feature intensity per cluster.
+    dplyr::summarize(
+      `Feature intensity` = max(`Feature intensity`, na.rm = TRUE)
+    )
+
+  fused <- dplyr::full_join(ms1, ms2) %>%
+    dplyr::mutate(
+      Intensity = pmax(Intensity, `Feature intensity`, na.rm = TRUE)
+    ) %>%
+    dplyr::select(-`Feature intensity`)
+
+  fused <- fused %>%
     # The following code keeps only the highest intensity value when a given
     # Dataset has multiple Intensity values within a pcGroup. This computation
     # is carried out within each Gene, CV, and Fraction.
     dplyr::group_by(Dataset, CV, Gene, pcGroup) %>%
-    dplyr::summarize(Intensity = the_summary(Intensity, na.rm = TRUE),
-                     RTalign = mean(RTalign, na.rm = TRUE),
-                     RTapex = mean(Time_apex, na.rm = TRUE)) %>%
+    dplyr::summarize(Intensity = the_summary(Intensity, na.rm = TRUE)) %>%
     dplyr::ungroup()
 
   return (fused)
