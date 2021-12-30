@@ -82,8 +82,7 @@ match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff,
       dplyr::filter(
         abs(RTalign - centroids$mediRT[[e]]) < rt_cutoff
       ) %>%
-      dplyr::select(Dataset, Intensity, CV, Time_apex,
-                    RTalign, RecalMass) %>%
+      dplyr::select(Dataset, CV, Intensity) %>%
       dplyr::mutate(
         Gene = centroids$Gene[[e]],
         cluster = centroids$cluster[[e]],
