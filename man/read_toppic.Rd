@@ -30,7 +30,7 @@ added/removed:\tabular{ll}{
    \code{mz} \tab \verb{Prsm ID} \cr
    \code{Gene} \tab \verb{Spectrum ID} \cr
    \code{isDecoy} \tab \code{Fragmentation} \cr
-   \code{CV} (if FAIMS) \tab \verb{#peaks} \cr
+   \code{CV} \tab \verb{#peaks} \cr
     \tab \verb{Proteoform ID} \cr
     \tab \verb{Feature score} \cr
     \tab \verb{First residue} \cr
@@ -47,7 +47,7 @@ When unidentified (MS2) data is the input, the the following variables are
 added/removed:\tabular{ll}{
    Added \tab Removed \cr
    \code{Dataset} \tab \code{Sample_ID} \cr
-   \code{CV} (if FAIMS) \tab \code{Minimum_fraction_id} \cr
+   \code{CV} \tab \code{Minimum_fraction_id} \cr
     \tab \code{Maximum_fraction_id} \cr
 }
 }

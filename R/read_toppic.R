@@ -31,7 +31,7 @@
 #'   | `mz`              | `Prsm ID`                  |
 #'   | `Gene`            | `Spectrum ID`              |
 #'   | `isDecoy`         | `Fragmentation`            |
-#'   | `CV` (if FAIMS)   | `#peaks`                   |
+#'   | `CV`              | `#peaks`                   |
 #'   |                   | `Proteoform ID`            |
 #'   |                   | `Feature score`            |
 #'   |                   | `First residue`            |
@@ -48,7 +48,7 @@
 #'   | Added             | Removed                    |
 #'   | ----------------- | -------------------------- |
 #'   | `Dataset`         | `Sample_ID`                |
-#'   | `CV` (if FAIMS)   | `Minimum_fraction_id`      |
+#'   | `CV`              | `Minimum_fraction_id`      |
 #'   |                   | `Maximum_fraction_id`      |
 #'
 #' @md
@@ -84,6 +84,14 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           Dataset = stringr::str_remove(Dataset, "_ms1.feature")
         )
 
+      # Rename all MS1 TopPIC variables that are used by TopPICR functions. We
+      # take this step so only one instance of the TopPIC name has to be changed
+      # if they change the name of any of these variables in a later version.
+      the_list[[e]] <- the_list[[e]] %>%
+        dplyr::mutate(
+          Intensity = Intensity
+        )
+
     }
 
   } else {
@@ -106,12 +114,34 @@ read_toppic <- function (file_path, file_name, faims, ...) {
         file = file.path(file_path, file_name[[e]]),
         skip = n_prelim,
         ...
-      ) %>%
+      )
+
+      # Rename all MS2 TopPIC variables that are used by TopPICR functions. We
+      # take this step so only one instance of the TopPIC name has to be changed
+      # if they change the name of any of these variables in a later version.
+      the_list[[e]] <- the_list[[e]] %>%
         dplyr::mutate(
+          `Feature apex` = `Feature apex time`,
+          `Feature intensity` = `Feature intensity`,
+          `E-value` = `E-value`,
+          Proteoform = Proteoform,
+          `Scan(s)` = `Scan(s)`,
+          `#unexpected modifications` = `#unexpected modifications`,
+          `Precursor mass` = `Precursor mass`,
+          `Adjusted precursor mass` = `Adjusted precursor mass`,
+          MIScore = MIScore
+        )
+
+      # Create variables used by TopPICR from existing TopPIC variables.
+      the_list[[e]] <- the_list[[e]] %>%
+        dplyr::mutate(
+          # If the TopPIC authorities change the names of the `Data file name`,
+          # Charge, `Protein description`, or `Protein accession` variables they
+          # will need to be adjusted accordingly in the following lines.
           Dataset = stringr::str_remove(`Data file name`, "_ms2.msalign"),
           Dataset = sapply(str_split(Dataset, "/"), tail, 1),
           mz = (`Precursor mass` + Charge * 1.007276466621) / Charge,
-          Gene = sub(".*GN=(\\S+).*","\\1",`Protein description`),
+          Gene = sub(".*GN=(\\S+).*", "\\1", `Protein description`),
           isDecoy = grepl("^DECOY", `Protein accession`)
         ) %>%
         dplyr::filter(grepl("GN=", `Protein description`))
@@ -123,7 +153,8 @@ read_toppic <- function (file_path, file_name, faims, ...) {
   # Combine data from all files.
   x <- rbindlist(the_list)
 
-  # Include CV variable if working with FAIMS data.
+  # Include CV variable with data extracted from the Dataset variable if working
+  # with FAIMS data.
   if (faims) {
 
     x <- x %>%
@@ -133,6 +164,14 @@ read_toppic <- function (file_path, file_name, faims, ...) {
         # this we will always be grouping by CV anytime we group by Dataset.
         Dataset = str_replace(Dataset, "_[0-9]*$", "")
       )
+
+  } else {
+
+    # Add a character string for the CV variable indicating there are no CVs.
+    # The CV variable needs to exist even when there aren't any CVs because many
+    # of the remaining functions will group by CV.
+    x <- x %>%
+      dplyr::mutate(CV = "noFAIMS")
 
   }
 
