@@ -4,7 +4,7 @@
 \alias{match_features}
 \title{Extract feature intensity values from unidentified feature data}
 \usage{
-match_features(ms2, ms1, ppm_cutoff, rt_cutoff, summary_fn = "max")
+match_features(ms2, ms1, errors, n_ppm_sd, n_rt_sd, summary_fn = "max")
 }
 \arguments{
 \item{ms2}{A \code{data.table} containing the identified feature data.}
@@ -15,17 +15,28 @@ This data is created from the files output by TopPIC ending with
 variables. These variables are created with the unidentified feature data
 in the \code{align_rt} and \code{recalibrate_mass} functions.}
 
-\item{ppm_cutoff}{An integer representing the retention time cutoff in
-seconds. This value is the threshold used to determine if an unidentified
-feature is close enough in retention time to be considered part of an
-identified feature cluster. The mean retention time of all points in the
-cluster is used for the comparison.}
+\item{errors}{A \code{list} output from the \code{calc_error} function. The
+ppm and retention time standard deviations (across all data sets) are the
+last two elements of this list. They will be used along with the
+\code{n_ppm_sd} and \code{n_rt_sd} arguments for determining whether or not
+an unidentified feature belongs to a given cluster.}
 
-\item{rt_cutoff}{An integer indicating the mass cutoff in ppm. This value is
-used as the threshold for determining if an unidentified feature is close
-enough in mass to be considered part of an identified feature cluster. The
-mean \code{RecalMass} of all points in the cluster is used for the
-comparison.}
+\item{n_ppm_sd}{The number of standard deviations used to create a ppm cutoff
+when determining if an unidentified feature belongs to a given cluster. A
+feature belongs to a cluster if its recalibrated mass and aligned retention
+time fall within the mass/retention time envelope around the cluster's
+centroid.}
+
+\item{n_rt_sd}{The number of standard deviations used to create a retention
+time cutoff when determining if an unidentified feature belongs to a given
+cluster. A feature belongs to a cluster if its recalibrated mass and
+aligned retention time fall within the mass/retention time envelope around
+the cluster's centroid.}
+
+\item{summary_fn}{A character string specifying the function to use when
+summarizing the feature intensity. The function must contain the
+\code{na.rm} argument. Some examples of functions that are allowed are
+\code{max}, \code{sum}, or \code{median}.}
 }
 \value{
 A \code{data.table} containing all unidentified features that fall

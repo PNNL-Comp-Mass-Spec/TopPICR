@@ -4,10 +4,22 @@
 \alias{create_mdata}
 \title{Create feature metadata}
 \usage{
-create_mdata(x, cutoff_ppm, cutoff_rt)
+create_mdata(x, errors, n_ppm_sd, n_rt_sd)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{create_pcg} function.}
+
+\item{errors}{A \code{list} output from the \code{calc_error} function. The
+ppm and retention time standard deviations (across all data sets) are the
+last two elements of this list. They will be used along with the
+\code{n_ppm_sd} and \code{n_rt_sd} arguments for determining whether or not
+two clusters are the same.}
+
+\item{n_ppm_sd}{The number of standard deviations used to create a ppm cutoff
+when determining if two clusters should be considered the same.}
+
+\item{n_rt_sd}{The number of standard deviations used to create a retention
+time cutoff when determining if two clusters should be considered the same.}
 }
 \value{
 A \code{data.table} with a row for each unique combination of \code{Gene},

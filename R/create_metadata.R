@@ -6,6 +6,18 @@
 #'
 #' @param x A \code{data.table} output from the \code{create_pcg} function.
 #'
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   ppm and retention time standard deviations (across all data sets) are the
+#'   last two elements of this list. They will be used along with the
+#'   \code{n_ppm_sd} and \code{n_rt_sd} arguments for determining whether or not
+#'   two clusters are the same.
+#'
+#' @param n_ppm_sd The number of standard deviations used to create a ppm cutoff
+#'   when determining if two clusters should be considered the same.
+#'
+#' @param n_rt_sd The number of standard deviations used to create a retention
+#'   time cutoff when determining if two clusters should be considered the same.
+#'
 #' @return A \code{data.table} with a row for each unique combination of `Gene`,
 #'   `pcGroup`, and `Proteoform`. The `collision` variable indicates which
 #'   clusters have the same centroid across multiple genes. The
@@ -19,12 +31,12 @@
 #'
 #' @export
 #'
-create_mdata <- function (x, cutoff_ppm, cutoff_rt) {
+create_mdata <- function (x, errors, n_ppm_sd, n_rt_sd) {
 
   # First create the collision variable.
   x_collision <- find_collider(x = x,
-                               cutoff_ppm = cutoff_ppm,
-                               cutoff_rt = cutoff_rt)
+                               cutoff_ppm = errors$ppm_sd * n_ppm_sd,
+                               cutoff_rt = errors$rt_sd * n_rt_sd)
 
   # Return the metadata data frame.
   return (
