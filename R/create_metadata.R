@@ -6,17 +6,14 @@
 #'
 #' @param x A \code{data.table} output from the \code{create_pcg} function.
 #'
-#' @param errors A \code{list} output from the \code{calc_error} function. The
-#'   ppm and retention time standard deviations (across all data sets) are the
-#'   last two elements of this list. They will be used along with the
-#'   \code{n_ppm_sd} and \code{n_rt_sd} arguments for determining whether or not
-#'   two clusters are the same.
+#' @param ppm_cutoff A numeric value indicating the mass cutoff in ppm. This
+#'   value is used as the threshold for determining if two clusters (from two
+#'   different genes) have the same centroid in mass space.
 #'
-#' @param n_ppm_sd The number of standard deviations used to create a ppm cutoff
-#'   when determining if two clusters should be considered the same.
-#'
-#' @param n_rt_sd The number of standard deviations used to create a retention
-#'   time cutoff when determining if two clusters should be considered the same.
+#' @param rt_cutoff A numeric value representing the retention time cutoff in
+#'   seconds. This value is used as the threshold for determining if two
+#'   clusters (from two different genes) have the same centroid in retention
+#'   time space.
 #'
 #' @return A \code{data.table} with a row for each unique combination of `Gene`,
 #'   `pcGroup`, and `Proteoform`. The `collision` variable indicates which
@@ -31,12 +28,12 @@
 #'
 #' @export
 #'
-create_mdata <- function (x, errors, n_ppm_sd, n_rt_sd) {
+create_mdata <- function (x, ppm_cutoff, rt_cutoff) {
 
   # First create the collision variable.
   x_collision <- find_collider(x = x,
-                               cutoff_ppm = errors$ppm_sd * n_ppm_sd,
-                               cutoff_rt = errors$rt_sd * n_rt_sd)
+                               ppm_cutoff = ppm_cutoff,
+                               rt_cutoff = rt_cutoff)
 
   # Return the metadata data frame.
   return (
@@ -81,7 +78,7 @@ create_mdata <- function (x, errors, n_ppm_sd, n_rt_sd) {
 # mass/retention time threshold) but the genes of the two clusters are different
 # and marks them as colliding genes.
 # @author Evan A Martin
-find_collider <- function (x, cutoff_ppm, cutoff_rt) {
+find_collider <- function (x, ppm_cutoff, rt_cutoff) {
 
   # Keep only unique Gene/cluster combinations (excluding the 0 cluster).
   # Calculate the centroid of each cluster. The centroid is the median mass and
@@ -115,7 +112,7 @@ find_collider <- function (x, cutoff_ppm, cutoff_rt) {
         # Check if the retention time falls within the threshold. If it does
         # proceed with calculating the ppm difference between the two gccs.
         if (abs(unique_gccs$cntr_rt[[e]] -
-                unique_gccs$cntr_rt[[v]]) < cutoff_rt) {
+                unique_gccs$cntr_rt[[v]]) < rt_cutoff) {
 
           # Compute the ppm difference between the two gccs.
           diff_ppm <- abs(
@@ -126,7 +123,7 @@ find_collider <- function (x, cutoff_ppm, cutoff_rt) {
           # Check if the vth gcc falls within the threshold of the eth gcc and
           # if the genes for the two gccs are different. If the genes are
           # different the two gccs will be combined.
-          if (diff_ppm < cutoff_ppm &&
+          if (diff_ppm < ppm_cutoff &&
               unique_gccs$Gene[[e]] != unique_gccs$Gene[[v]]) {
 
             # Mark each gene with the gene it collides with. For example, if
