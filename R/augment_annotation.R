@@ -79,16 +79,9 @@ augment_annotation <- function (x,
   # Find all matching UniProt accessions for each clean sequence.
   augmented <- map_peptides_to_fasta(peptides,
                                      fst_norm) %>%
-    dplyr::mutate(
-      AnnType2 = dplyr::case_when(
-        grepl("sp\\|", accession) ~ "SwissProt",
-        grepl("tr\\|", accession) ~ "TrEMBL"
-      )
-    ) %>%
-    dplyr::group_by(cleanSeq, AnnType2) %>%
+    dplyr::group_by(cleanSeq) %>%
     dplyr::add_count(name = "AccMap") %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-AnnType2)
+    dplyr::ungroup()
 
   # Add the UniProtAcc and AnnType variables using the accession variable.
   x_norm <- dplyr::inner_join(x_norm, augmented) %>%
@@ -123,16 +116,9 @@ augment_annotation <- function (x,
   # Find all matching UniProt accessions for each clean sequence.
   augmented <- map_peptides_to_fasta(peptides,
                                      fst_decoy) %>%
-    dplyr::mutate(
-      AnnType2 = dplyr::case_when(
-        grepl("sp\\|", accession) ~ "SwissProt",
-        grepl("tr\\|", accession) ~ "TrEMBL"
-      )
-    ) %>%
-    dplyr::group_by(cleanSeq, AnnType2) %>%
+    dplyr::group_by(cleanSeq) %>%
     dplyr::add_count(name = "AccMap") %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-AnnType2)
+    dplyr::ungroup()
 
   # Add the UniProtAcc and AnnType variables using the accession variable.
   x_decoy <- dplyr::inner_join(x_decoy, augmented) %>%
