@@ -59,17 +59,18 @@ create_mdata <- function (x, ppm_cutoff, rt_cutoff) {
       ) %>%
       dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass, MIScore) %>%
       dplyr:: mutate(
-        n_pf = dplyr::n(),
+        spectralCount = dplyr::n(),
         rt = stats::median(RTalign, na.rm = TRUE),
         mass = stats::median(RecalMass, na.rm = TRUE)
       ) %>%
       dplyr::ungroup() %>%
       dplyr::group_by(Gene, pcGroup) %>%
-      dplyr::slice_max(n_pf) %>%
+      dplyr::slice_max(spectralCount) %>%
       dplyr::slice_min(`E-value`) %>%
       dplyr::ungroup() %>%
       dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
-                    firstAA, lastAA, protLength, Proteoform)
+                    firstAA, lastAA, protLength, Proteoform, AnnType,
+                    MIScore, `#unexpected modifications`, spectralCount)
   )
 
 }
