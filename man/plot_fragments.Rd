@@ -29,8 +29,7 @@ used.}
 
 \item{viridis}{A character string indicating which colormap option will be
 used. The available options are: "magma" (or "A"), "inferno" (or "B"),
-"plasma" (or "C"), "viridis" (or "D", the default option) and "cividis" (or
-"E").}
+"plasma" (or "C"), "viridis" (or "D") and "cividis" (or "E").}
 
 \item{save_plot}{A logical value. If TRUE the plot will be saved as a PNG
 file. When a plot is saved to a file it is not also displayed in R/RStudio.}

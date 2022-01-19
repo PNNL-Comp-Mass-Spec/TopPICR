@@ -15,8 +15,7 @@
 #'
 #' @param viridis A character string indicating which colormap option will be
 #'   used. The available options are: "magma" (or "A"), "inferno" (or "B"),
-#'   "plasma" (or "C"), "viridis" (or "D", the default option) and "cividis" (or
-#'   "E").
+#'   "plasma" (or "C"), "viridis" (or "D") and "cividis" (or "E").
 #'
 #' @param accession A character string specifying which UniProt accession will
 #'   be plotted.
@@ -190,9 +189,7 @@ plot_accession <- function (x, accession, turbo, viridis,
                                     xmax = lastAA,
                                     ymin = ymin,
                                     ymax = ymax,
-                                    fill = n)) # ,
-                       # color = "black",
-                       # size = 1)
+                                    fill = n))
 
   # Use turbo colors.
   if (turbo) {
