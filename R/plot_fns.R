@@ -10,6 +10,9 @@
 #'   accession mapping to the specified gene. When a \code{gene} is specified
 #'   \code{accession} does not also need to be specified.
 #'
+#' @param accession A character string specifying which UniProt accession will
+#'   be plotted.
+#'
 #' @param turbo A logical value indicating whether the Turbo colormap will be
 #'   used.
 #'
@@ -17,8 +20,11 @@
 #'   used. The available options are: "magma" (or "A"), "inferno" (or "B"),
 #'   "plasma" (or "C"), "viridis" (or "D") and "cividis" (or "E").
 #'
-#' @param accession A character string specifying which UniProt accession will
-#'   be plotted.
+#' @param size An integer specifying the size of the border around each
+#'   fragment. The default size is 1.
+#'
+#' @param color A character string indicating the color of the border around
+#'   each fragment. The default is white.
 #'
 #' @param save_plot A logical value. If TRUE the plot will be saved as a PNG
 #'   file. When a plot is saved to a file it is not also displayed in R/RStudio.
@@ -35,6 +41,7 @@
 #'
 plot_fragments <- function (x, gene = NULL, accession = NULL,
                             turbo = TRUE, viridis = NULL,
+                            size = 1, color = "white",
                             save_plot = FALSE, file_path = NULL) {
 
   # Throw an error if both gene and accession are NULL.
@@ -79,6 +86,8 @@ plot_fragments <- function (x, gene = NULL, accession = NULL,
                    accession = accession,
                    turbo = turbo,
                    viridis = viridis,
+                   size = size,
+                   color = color,
                    save_plot = save_plot,
                    file_path = file_path)
 
@@ -98,6 +107,8 @@ plot_fragments <- function (x, gene = NULL, accession = NULL,
                           accession = unique_acc[[e]],
                           turbo = turbo,
                           viridis = viridis,
+                          size = size,
+                          color = color,
                           save_plot = save_plot,
                           file_path = file_path)
 
@@ -114,8 +125,8 @@ plot_fragments <- function (x, gene = NULL, accession = NULL,
 }
 
 # @author Vlad Petyuk
-plot_accession <- function (x, accession, turbo, viridis,
-                            save_plot, file_path) {
+plot_accession <- function (x, accession, turbo, viridis, size,
+                            color, save_plot, file_path) {
 
   prot_len <- x %>%
     dplyr::filter(UniProtAcc == accession) %>%
@@ -185,11 +196,13 @@ plot_accession <- function (x, accession, turbo, viridis,
                                     xmax = prot_len + 2,
                                     ymin = -0.04,
                                     ymax = 0.04)) +
-    ggplot2::geom_rect(ggplot2::aes(xmin = firstAA,
-                                    xmax = lastAA,
+    ggplot2::geom_rect(ggplot2::aes(xmin = firstAA - 0.5,
+                                    xmax = lastAA + 0.5,
                                     ymin = ymin,
                                     ymax = ymax,
-                                    fill = n))
+                                    fill = n),
+                       size = size,
+                       color = color)
 
   # Use turbo colors.
   if (turbo) {

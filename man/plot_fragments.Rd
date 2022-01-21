@@ -10,6 +10,8 @@ plot_fragments(
   accession = NULL,
   turbo = TRUE,
   viridis = NULL,
+  size = 1,
+  color = "white",
   save_plot = FALSE,
   file_path = NULL
 )
@@ -30,6 +32,12 @@ used.}
 \item{viridis}{A character string indicating which colormap option will be
 used. The available options are: "magma" (or "A"), "inferno" (or "B"),
 "plasma" (or "C"), "viridis" (or "D") and "cividis" (or "E").}
+
+\item{size}{An integer specifying the size of the border around each
+fragment. The default size is 1.}
+
+\item{color}{A character string indicating the color of the border around
+each fragment. The default is white.}
 
 \item{save_plot}{A logical value. If TRUE the plot will be saved as a PNG
 file. When a plot is saved to a file it is not also displayed in R/RStudio.}
