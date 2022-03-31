@@ -65,7 +65,7 @@ read_toppic <- function (file_path, file_name, faims, ...) {
 
   # Determine whether the data are MS1 or MS2 files and read the data in
   # accordingly.
-  if (str_detect(file_name[[1]], "ms1.feature")) {
+  if (stringr::str_detect(file_name[[1]], "ms1.feature")) {
 
     # Loop through each MS1 file and read it into R.
     for (e in 1:length(file_name)) {
@@ -139,7 +139,7 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           # Charge, `Protein description`, or `Protein accession` variables they
           # will need to be adjusted accordingly in the following lines.
           Dataset = stringr::str_remove(`Data file name`, "_ms2.msalign"),
-          Dataset = sapply(str_split(Dataset, "/"), tail, 1),
+          Dataset = sapply(stringr::str_split(Dataset, "/"), tail, 1),
           mz = (`Precursor mass` + Charge * 1.007276466621) / Charge,
           Gene = sub(".*GN=(\\S+).*", "\\1", `Protein description`),
           isDecoy = grepl("^DECOY", `Protein accession`)
@@ -159,10 +159,10 @@ read_toppic <- function (file_path, file_name, faims, ...) {
 
     x <- x %>%
       dplyr::mutate(
-        CV = sapply(str_split(Dataset, "_"), tail, 1),
+        CV = sapply(stringr::str_split(Dataset, "_"), tail, 1),
         # Remove the CV information from the Dataset variable. If we don't do
         # this we will always be grouping by CV anytime we group by Dataset.
-        Dataset = str_replace(Dataset, "_[0-9]*$", "")
+        Dataset = stringr::str_replace(Dataset, "_[0-9]*$", "")
       )
 
   } else {
