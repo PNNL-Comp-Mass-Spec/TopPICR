@@ -101,11 +101,12 @@ read_toppic <- function (file_path, file_name, faims, ...) {
     for (e in 1:length(file_name)) {
 
       # Find the number of lines preceding the header.
-      the_lines <- system(paste("grep -n '^\\*' ",
-                                file_path,
-                                file_name[[e]],
-                                sep = ""),
-                          intern = TRUE)
+      the_lines <- system2(command = "grep",
+                           args = paste(" -n '^\\*' ",
+                                        file_path,
+                                        file_name[[e]],
+                                        sep = ""),
+                           stdout = TRUE)
       n_lines <- length(the_lines)
       n_prelim <- as.numeric(gsub("[^{0-9}]*", "", the_lines[[n_lines]]))
 
