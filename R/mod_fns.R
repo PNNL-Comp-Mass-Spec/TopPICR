@@ -1,5 +1,6 @@
 # Create mod data --------------------------------------------------------------
 
+#' @export
 create_mod_data <- function (toppic_mods, toppic_path) {
 
   # prefilter unimod
@@ -46,6 +47,7 @@ create_mod_data <- function (toppic_mods, toppic_path) {
 
 # Update mod data and combine with metadata ------------------------------------
 
+#' @export
 add_mods <- function (x,
                       mods,
                       nterm_tol = 3,
