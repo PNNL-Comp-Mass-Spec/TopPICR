@@ -224,7 +224,8 @@ plot_accession <- function (x, accession, turbo, viridis, size,
 
     }
 
-  } else if (!is.null(viridis)) {
+    # Use viridis colors if turbo is FALSE.
+  } else if (!turbo && !is.null(viridis)) {
 
     p <- p +
       ggplot2::scale_fill_viridis_c(option = viridis)
@@ -263,6 +264,302 @@ plot_accession <- function (x, accession, turbo, viridis, size,
 
   }
 
+}
+
+#' ...
+#'
+#' ...
+#'
+#' @param x A \code{data.table} output from the \code{create_mdata} function.
+#'
+#' @param accession ...
+#'
+#' @param fill_by ...
+#'
+#' @param name_from ...
+#'
+#' @param mods_to_name ...
+#'
+#' @param border_color ...
+#'
+#' @param border_size ...
+#'
+#' @param aa_step ...
+#'
+#' @param na_symbol ...
+#'
+#' @param save_plot ...
+#'
+#' @param file_path ...
+#'
+#' @return ...
+#'
+#' @export
+#'
+#' @author Vlad Petyuk
+#'
+plot_accession_ptm <- function (x,
+                                accession,
+                                fill_by = "spectralCount",
+                                turbo = TRUE,
+                                viridis = NULL,
+                                name_from = c("Gene", "UniProtAcc"),
+                                mods_to_name = "all",
+                                border_color = "white",
+                                border_size = NULL,
+                                aa_step = 20,
+                                na_symbol = " ",
+                                save_plot = FALSE,
+                                file_path = NULL) {
+
+  # Make sure fill_by is a variable in the data.
+  if (!fill_by %in% names(x)) {
+
+    stop ("The variable specified in fill_by is not present in x.")
+
+  }
+
+  # Combine the Gene and pcGroup into one variable. This is used later when
+  # producing the plot with the PTMs.
+  x <- x %>%
+    dplyr::mutate(feature_name = paste(Gene, pcGroup, sep = "_"))
+
+  # sort out mod_to_name
+  if(length(mods_to_name) == 1 && grepl("top\\d+", mods_to_name)){
+    mods <- get_mods_counts(x, accession)
+    top_n_mods <- as.numeric(sub("top", "", mods_to_name))
+    top_n_mods <- min(top_n_mods, 9) # we'll restrict with 9
+    mods_to_name <- names(mods)[seq_len(min(length(mods), top_n_mods))]
+  }
+
+  prot_len <- dplyr::filter(x, UniProtAcc == accession) %>%
+    dplyr::distinct(protLength) %>%
+    as.numeric()
+
+  if(is.null(border_size)){
+    border_size <- 1.5/log10(prot_len)
+  }
+
+  prot_name_cols <- x %>%
+    dplyr::filter(UniProtAcc == accession) %>%
+    dplyr::distinct(!!! rlang::syms(name_from))
+
+  prot_name <- paste0(prot_name_cols, collapse = ", ")
+
+  # if(nrow(prot_name_cols) == 1){
+  #   prot_name <- paste0(prot_name_cols, collapse = ", ")
+  # }else{
+  #   stop ("name_from isn't unique!")
+  # }
+
+  prot <- x %>%
+    dplyr::filter(UniProtAcc == accession) %>%
+    dplyr::mutate(Length = lastAA - firstAA + 1) %>%
+    # dplyr::arrange(firstAA, -Length, -!!rlang::sym(fill_by))
+    dplyr::arrange(firstAA, -Length)
+
+  # setting staggered ymin
+  min_y <- 0.1
+  step_y <- 0.033
+  width_y <- 0.025
+
+  prot$ymin <- min_y
+  if(nrow(prot) > 1){
+    for(i in 2:nrow(prot)){
+      current_y <- min_y
+      while(TRUE){
+        # is there a conflict
+        max_last_residue <- prot %>%
+          dplyr::slice(1:(i-1)) %>%
+          dplyr::filter(ymin == current_y) %>%
+          dplyr::pull(lastAA) %>%
+          max()
+        if(max_last_residue + 0 >= prot[i, "firstAA", drop = TRUE]){
+          current_y <- current_y + step_y
+        }else{
+          break()
+        }
+      }
+      prot[i, "ymin"] <- current_y
+    }
+  }
+
+  prot$ymax <- prot$ymin + width_y
+  p <- ggplot2::ggplot(data = prot) +
+    ggplot2::geom_rect(ggplot2::aes(xmin = 1 - 0.5,
+                                    xmax = prot_len + 0.5,
+                                    ymin = -0.04,
+                                    ymax = +0.04)) +
+    ggplot2::geom_rect(ggplot2::aes(xmin = firstAA - 0.5,
+                                    xmax = lastAA + 0.5,
+                                    ymin = ymin,
+                                    ymax = ymax,
+                                    fill = !!rlang::sym(fill_by)),
+                       color = border_color,
+                       size = border_size)
+
+  # Use turbo colors.
+  if (turbo) {
+
+    n_colors <- dplyr::n_distinct(prot[, fill_by])
+
+    # use gradient if there is only one color.
+    if (n_colors == 1) {
+
+      p <- p +
+        ggplot2::scale_fill_gradient(low = turbo(2)[[1]],
+                                     high = turbo(2)[[2]])
+
+      # Use gradientn when there is more than one color.
+    } else if (n_colors > 1){
+
+      p <- p +
+        ggplot2::scale_fill_gradientn(colors = turbo(n_colors))
+
+    }
+
+    # Use viridis colors if turbo is FALSE.
+  } else if (!turbo && !is.null(viridis)) {
+
+    p <- p +
+      ggplot2::scale_fill_viridis_c(option = viridis)
+
+  }
+
+  prot_mods <- list()
+  for(i in 1:nrow(prot)){
+    mod_i <- as.data.frame(prot$mods[[i]][c("mod_names",
+                                            "mods_left_border",
+                                            "mods_right_border")])
+    if(nrow(mod_i) > 0)
+      mod_i$feature_name <- prot$feature_name[i]
+    prot_mods <- c(prot_mods, list(mod_i))
+  }
+
+  prot_mods <- dplyr::bind_rows(prot_mods) %>%
+    dplyr::mutate(label = mod_names)
+
+  # plotting mods piece
+  if (!(identical(mods_to_name, "none") || nrow(prot_mods) == 0)) {
+
+    prot_mods_full <- dplyr::inner_join(prot,
+                                        prot_mods,
+                                        by = "feature_name") %>%
+      dplyr::mutate(
+        x = (mods_right_border + mods_left_border) / 2 + firstAA - 1
+      ) %>%
+      dplyr::mutate(y = (ymin + ymax) / 2)
+
+    if (identical(mods_to_name, "all")) {
+      p <- p +
+        ggplot2::geom_label(
+          ggplot2::aes(x = x,
+                       y = y,
+                       label = label),
+          data = prot_mods_full,
+          fill = ggplot2::alpha("white", alpha = 0.9),
+          show.legend = FALSE
+        )
+    }else{
+      prot_mods_full <- prot_mods_full %>%
+        dplyr::mutate(
+          label_selected = dplyr::case_when(
+            label %in% mods_to_name ~ label,
+            TRUE ~ "Other"
+          )
+        )
+
+      # updates mods_to_name
+      mods_to_name <- seq_along(mods_to_name) %>%
+        stats::setNames(mods_to_name)
+
+      # update label here
+      prot_mods_full <- prot_mods_full %>%
+        dplyr::mutate(label_short = mods_to_name[mod_names]) %>%
+        dplyr::mutate(label_short = as.character(label_short)) %>%
+        dplyr::mutate(
+          label_short = dplyr::case_when(
+            is.na(label_short) ~ na_symbol,
+            TRUE ~ label_short
+          )
+        )
+
+      namer <- prot_mods_full %>%
+        dplyr::distinct(label_short, label_selected) %>%
+        {temp <- .$label_short; names(temp) <- .$label_selected;temp}
+      namer <- sort(namer, na.last = NA)
+      if (namer[1] == na_symbol) {
+        namer <- c(namer[-1], namer[1]) # putting blank space last
+      }
+
+      p <- p +
+        ggplot2::geom_label(ggplot2::aes(x = x, y = y),
+                            label = " ",
+                            data = prot_mods_full,
+                            fill = ggplot2::alpha("white", alpha = 0.9),
+                            # fill = alpha("white", alpha=0.8),
+                            show.legend = FALSE) +
+        ggplot2::geom_point(
+          ggplot2::aes(x = x, y = y, shape = label_selected),
+          size = 4,
+          data = prot_mods_full
+        ) +
+        ggplot2::scale_shape_manual(values = namer, name = "modification")
+    }
+  }
+
+  p <- p +
+    ggplot2::ylab(NULL) +
+    ggplot2::xlab("residue") +
+    ggplot2::theme_classic() +
+    ggplot2::theme(
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_blank(),
+      axis.line.y = ggplot2::element_blank(),
+      axis.line.x = ggplot2::element_blank(),
+      # legend.box.background = "black",
+      legend.key = ggplot2::element_rect(color = "black")
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = c(1, seq(aa_step, prot_len, aa_step))
+    ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5),
+      plot.title = ggplot2::element_text(hjust = 0.5, size = 16)
+      # ,panel.background = element_rect(fill = "grey95")
+    ) +
+    ggplot2::ggtitle(prot_name)
+
+  if(max(prot$ymax) < 0.5)
+    p <- p +
+    ggplot2::ylim(-0.04, 0.5)
+
+  file_name <- gsub(", ", "_", prot_name)
+
+  if (save_plot) {
+
+    ggplot2::ggsave(filename = paste0(file_name,".png"),
+                    plot = p,
+                    path = file_path)
+
+  } else {
+
+    return (p)
+
+  }
+
+}
+
+# @author Vlad Petyuk
+get_mods_counts <- function(x, acc){
+  y <- dplyr::filter(x, UniProtAcc == acc) %>%
+    dplyr::mutate(stuff = purrr::map(mods, `$`, mod_names)) %>%
+    dplyr::pull(stuff) %>%
+    unlist() %>%
+    table() %>%
+    sort() %>%
+    rev()
+  return(y)
 }
 
 # Spectral count by accession --------------------------------------------------
