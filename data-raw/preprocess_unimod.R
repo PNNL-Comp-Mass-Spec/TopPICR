@@ -5,6 +5,8 @@
 
 unimods <- preprocess_unimod("~/Downloads")
 
+usethis::use_data(unimods, internal = TRUE, overwrite = TRUE)
+
 # Functions for processing unimod data -----------------------------------------
 
 preprocess_unimod <- function (path_to_unimod) {
@@ -36,18 +38,23 @@ preprocess_unimod <- function (path_to_unimod) {
     dplyr::filter(!(classification %in% c("Chemical derivative",
                                           "Isotopic label",
                                           "Other"))) %>%
-    filter(!(title %in% c("Label:13C(1)2H(3)+Oxidation","AHA-SS_CAM","AHA-SS",
-                          "BDMAPP","Glu->pyro-Glu+Methyl:2H(2)13C(1)",
-                          "Iodoacetanilide:13C(6)","Iodoacetanilide",
-                          "Label:2H(4)+GG",
-                          "DMPO",
-                          "Delta:H(10)C(8)O(1)",
-                          "trifluoro",
-                          "HN2_mustard",
-                          "HN3_mustard",
-                          "AEBS",
-                          "CarbamidomethylDTT",
-                          "Hydroxamic_acid")))
+    dplyr::filter(
+      !(title %in% c("Label:13C(1)2H(3)+Oxidation","AHA-SS_CAM","AHA-SS",
+                     "BDMAPP","Glu->pyro-Glu+Methyl:2H(2)13C(1)",
+                     "Iodoacetanilide:13C(6)","Iodoacetanilide",
+                     "Label:2H(4)+GG",
+                     "DMPO",
+                     "Delta:H(10)C(8)O(1)",
+                     "trifluoro",
+                     "HN2_mustard",
+                     "HN3_mustard",
+                     "AEBS",
+                     "CarbamidomethylDTT",
+                     "Hydroxamic_acid"))
+    ) %>%
+    dplyr::select(mono_mass, title) %>%
+    `colnames<-`(c("mass", "name"))
+
 
   return (unimods)
 
