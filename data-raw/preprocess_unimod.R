@@ -5,8 +5,6 @@
 
 unimods <- preprocess_unimod("~/Downloads")
 
-usethis::use_data(unimods, internal = TRUE, overwrite = TRUE)
-
 # Functions for processing unimod data -----------------------------------------
 
 preprocess_unimod <- function (path_to_unimod) {
