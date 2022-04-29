@@ -1,47 +1,61 @@
 # Create mod data --------------------------------------------------------------
 
 #' @export
-create_mod_data <- function (toppic_mods, toppic_path) {
+create_mod_data <- function (mod_file, mod_path, use_unimod = FALSE) {
 
-  # prefilter unimod
-  dms_mods <- readr::read_csv(
-    file.path(toppic_path, toppic_mods),
-    col_names = FALSE
-  )
-
-  is_present <- rep(FALSE, nrow(unimods))
-  for(i in 1:nrow(unimods)){
-    mass_diff <- abs(unimods$mono_mass[i] - dms_mods$X2)
-    if(any(mass_diff < 0.001)){
-      is_present[i] <- TRUE
-    }
-  }
-
-  unimods <- unimods[!is_present, ]
-
-  # leave only one out of duplicated masses
-  unimods <- unimods %>%
-    dplyr::group_by(mono_mass) %>%
-    dplyr::slice_min(title)
-  # What does the min function do on character vectors? Is this the behavior
-  # you want for slice_min?
-
+  # Create a data frame for carbon 13.
   isotopic_errors <- tibble::tribble(
-    ~title, ~mono_mass, ~classification,
-    "+1C13", 1.003355, "Isotopic Error",
-    "+2C13", 2.00671, "Isotopic Error",
-    "+3C13", 3.010065, "Isotopic Error",
-    "-1C13", -1.003355, "Isotopic Error",
-    "-2C13", -2.00671, "Isotopic Error",
-    "-3C13", -3.010065, "Isotopic Error"
-  )
+    ~name, ~mass,
+    "+1C13", 1.003355,
+    "+2C13", 2.00671,
+    "+3C13", 3.010065,
+    "-1C13", -1.003355,
+    "-2C13", -2.00671,
+    "-3C13", -3.010065
+  ) %>%
+    dplyr::select(mass, name)
 
-  unimods <- dplyr::bind_rows(unimods, isotopic_errors)
+  # Determine what to return based on use_unimod argument.
+  if (use_unimod) {
 
-  unimods <- unimods[, c("mono_mass", "title")]
-  colnames(unimods) <- c("mass", "name")
+    # Read in mod information output by TopPIC.
+    toppic_mods <- readr::read_csv(
+      file.path(mod_path, mod_file),
+      comment = "#",
+      col_names = FALSE
+    ) %>%
+      dplyr::select(2:1) %>%
+      `colnames<-`(c("mass", "name"))
 
-  return (unimods)
+    is_present <- rep(FALSE, nrow(unimods))
+
+    # Determine what mods from TopPIC are also in unimod.
+    for(i in 1:nrow(unimods)){
+      mass_diff <- abs(unimods$mass[i] - toppic_mods$mass)
+      if(any(mass_diff < 0.001)){
+        is_present[i] <- TRUE
+      }
+    }
+
+    # Only keep mods not found in TopPIC mods.
+    unimods <- unimods[!is_present, ]
+
+    # leave only one out of duplicated masses
+    unimods <- unimods %>%
+      dplyr::group_by(mass) %>%
+      dplyr::slice_min(name)
+    # What does the min function do on character vectors? Is this the behavior
+    # you want for slice_min?
+
+    unimods <- dplyr::bind_rows(unimods, isotopic_errors)
+
+    return (unimods)
+
+  } else {
+
+    return (isotopic_errors)
+
+  }
 
 }
 
