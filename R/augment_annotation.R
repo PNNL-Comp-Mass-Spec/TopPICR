@@ -86,6 +86,10 @@ augment_annotation <- function (x,
   # Add the UniProtAcc and AnnType variables using the accession variable.
   x_norm <- dplyr::inner_join(x_norm, augmented) %>%
     dplyr::mutate(
+      Gene = stringr::str_extract(accession, "GN=\\S+"),
+      Gene = stringr::str_replace(Gene, "GN=", ""),
+      Gene = dplyr::case_when(is.na(Gene) ~ "",
+                              TRUE ~ Gene),
       UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession),
       AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
                                        accession) ~ "VarSplic",
@@ -123,6 +127,10 @@ augment_annotation <- function (x,
   # Add the UniProtAcc and AnnType variables using the accession variable.
   x_decoy <- dplyr::inner_join(x_decoy, augmented) %>%
     dplyr::mutate(
+      Gene = stringr::str_extract(accession, "GN=\\S+"),
+      Gene = stringr::str_replace(Gene, "GN=", ""),
+      Gene = dplyr::case_when(is.na(Gene) ~ "",
+                              TRUE ~ Gene),
       UniProtAcc = sub(".*[|]([^|]+)[|].*", "\\1", accession),
       AnnType = dplyr::case_when(grepl("^(DECOY_)?sp\\|[^-]*-\\d+\\|.*",
                                        accession) ~ "VarSplic",
