@@ -38,5 +38,5 @@ highest scoring UniProt accession for each amino acid sequence. Additional
 variables are also created from the current variables.
 }
 \author{
-Vlad Petyuk, Evan A Martin
+Evan A Martin
 }
