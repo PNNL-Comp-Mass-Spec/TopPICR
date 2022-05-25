@@ -67,7 +67,8 @@ add_mods <- function (x,
                       nterm_tol = 3,
                       acetyl_id = "Acetyl",
                       centroid_tol = 0.3,
-                      matching_tol = 0.1) {
+                      matching_tol = 0.1,
+                      matching_tol_self = .Machine$double.eps) {
 
   # Extract mods from the Proteoform column. The output from this step will be a
   # list. The information in this list will be used/modified by the remaining
@@ -94,13 +95,13 @@ add_mods <- function (x,
     dplyr::mutate(mods = purrr::map(mods,
                                     annotate_masses,
                                     mass_annotation_table = ann_table,
-                                    matching_tol = .Machine$double.eps))
+                                    matching_tol_self = matching_tol_self))
 
   return (x2)
 
 }
 
-extract_mods <- function(pform){
+extract_mods <- function (pform) {
 
   # add N- and C-term flanking character to make them the same
   pform <- sub("(^\\.)(.*)", "-\\1\\2", pform)
@@ -171,7 +172,10 @@ extract_mods <- function(pform){
 
 }
 
-annotate_Nterm_acetyls <- function (x, nterm_tol, acetyl_id) {
+#' @export
+annotate_Nterm_acetyls <- function (x,
+                                    nterm_tol = 3,
+                                    acetyl_id = "Acetyl") {
 
   for (i in 1:nrow(x)) {
 
@@ -213,9 +217,11 @@ annotate_Nterm_acetyls <- function (x, nterm_tol, acetyl_id) {
 
 }
 
-# returns a conversion table with measured_mass -> name (or centroid)
-get_mass_annotation_table <- function (x, unimods, centroid_tol,
-                                       matching_tol) {
+#' @export
+get_mass_annotation_table <- function (x,
+                                       unimods,
+                                       centroid_tol = 0.3,
+                                       matching_tol = 0.1) {
   suppressWarnings(
     mods_masses <- purrr::map(x$mods, ~ .x$mods_masses) %>%
       unlist() %>%
@@ -276,13 +282,17 @@ get_mass_annotation_table <- function (x, unimods, centroid_tol,
     return(NA_character_)
 }
 
-annotate_masses <- function (x, mass_annotation_table, matching_tol) {
+#' @export
+annotate_masses <- function (x,
+                             mass_annotation_table,
+                             matching_tol_self = .Machine$double.eps) {
 
   for (i in seq_along(x)) {
 
     names <- purrr::map_chr(x$mods_masses,
                             .annotate_one_mass,
-                            mass_annotation_table)
+                            mass_annotation_table = mass_annotation_table,
+                            matching_tol_self = matching_tol_self)
     chr_idx <- is.na(names)
     names[chr_idx] <- x$mods[chr_idx]
     x$mod_names <- names
@@ -305,13 +315,14 @@ annotate_masses <- function (x, mass_annotation_table, matching_tol) {
 }
 
 # applied to x_meta/fData
-.annotate_one_mass <- function(x, mass_annotation_table,
-                               matching_tol = .Machine$double.eps){
+.annotate_one_mass <- function (x,
+                                mass_annotation_table,
+                                matching_tol_self) {
   name <- NA_character_
   if(!is.na(x)){
     d <- mass_annotation_table$mod_mass - x
     i <- which.min(abs(d))
-    if(abs(d[i]) < matching_tol)
+    if(abs(d[i]) < matching_tol_self)
       name <- ifelse(
         is.na(mass_annotation_table$mod_name[i]),
         as.character(round(mass_annotation_table$mod_mass_centroid[i], 3)),
