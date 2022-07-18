@@ -20,9 +20,10 @@ A \code{data.table} containing the combined ms1 and ms2 feature
 intensity values.
 }
 \description{
-Combines the identified and unidentified feature data. The maximum feature
-intensity is selected for each combination of Dataset, CV, Gene, and pcGroup
-after joining the two data tables.
+Combines the identified and unidentified feature data. A representative
+feature intensity is selected (with a user selected method) for each
+combination of Dataset, CV, Gene, and pcGroup after joining the two data
+tables.
 }
 \author{
 Vlad Petyuk

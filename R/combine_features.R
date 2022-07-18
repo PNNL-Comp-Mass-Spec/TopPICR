@@ -1,8 +1,9 @@
 #' Combine identified and unidentified feature data
 #'
-#' Combines the identified and unidentified feature data. The maximum feature
-#' intensity is selected for each combination of Dataset, CV, Gene, and pcGroup
-#' after joining the two data tables.
+#' Combines the identified and unidentified feature data. A representative
+#' feature intensity is selected (with a user selected method) for each
+#' combination of Dataset, CV, Gene, and pcGroup after joining the two data
+#' tables.
 #'
 #' @param ms2 A \code{data.table} containing the identified feature data.
 #'
