@@ -37,8 +37,8 @@
 #' @export
 #'
 map_proteoform <- function (x,
-                                fst_path,
-                                fst_name) {
+                            fst_path,
+                            fst_name) {
 
   # Assemble AAStringSet objects -----------------------------------------------
 
