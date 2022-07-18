@@ -33,44 +33,44 @@ create_mdata <- function (x, ppm_cutoff, rt_cutoff) {
   # First create the collision variable.
   x_collision <- find_collider(x = x,
                                ppm_cutoff = ppm_cutoff,
-                               rt_cutoff = rt_cutoff)
+                               rt_cutoff = rt_cutoff) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      # First remove anything in square brackets that starts with a letter.
+      # The string in the square brackets may contain numbers, special
+      # characters, and letters (in that order) after the initial letter. For
+      # example, this will remove [Acetyl], [Plus1Oxy], and [NH3_Loss].
+      ModMass = stringr::str_remove_all(
+        Proteoform, "\\[[a-zA-Z]+[0-9]*.*?[a-zA-Z]*\\]"
+      ) %>%
+        # Remove all upper and lower case letters.
+        stringr::str_remove_all("[a-zA-Z]") %>%
+        # Remove beginning and ending periods.
+        stringr::str_remove_all("^\\.|\\.$") %>%
+        # Remove all parentheses and square brackets.
+        stringr::str_remove_all("\\(|\\)|\\[|\\]"),
+      ModMass = suppressWarnings(
+        round(as.numeric(ModMass), digits = 0)
+      )
+    ) %>%
+    dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass, MIScore) %>%
+    dplyr:: mutate(
+      spectralCount = dplyr::n(),
+      rt = stats::median(RTalign, na.rm = TRUE),
+      mass = stats::median(RecalMass, na.rm = TRUE)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(Gene, pcGroup) %>%
+    dplyr::slice_max(spectralCount) %>%
+    dplyr::slice_min(`E-value`) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
+                  firstAA, lastAA, protLength, Proteoform, AnnType,
+                  MIScore, `#unexpected modifications`, spectralCount)
 
   # Return the metadata data frame.
   return (
-    x_collision %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(
-        # First remove anything in square brackets that starts with a letter.
-        # The string in the square brackets may contain numbers, special
-        # characters, and letters (in that order) after the initial letter. For
-        # example, this will remove [Acetyl], [Plus1Oxy], and [NH3_Loss].
-        ModMass = stringr::str_remove_all(
-          Proteoform, "\\[[a-zA-Z]+[0-9]*.*?[a-zA-Z]*\\]"
-        ) %>%
-          # Remove all upper and lower case letters.
-          stringr::str_remove_all("[a-zA-Z]") %>%
-          # Remove beginning and ending periods.
-          stringr::str_remove_all("^\\.|\\.$") %>%
-          # Remove all parentheses and square brackets.
-          stringr::str_remove_all("\\(|\\)|\\[|\\]"),
-        ModMass = suppressWarnings(
-          round(as.numeric(ModMass), digits = 0)
-        )
-      ) %>%
-      dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass, MIScore) %>%
-      dplyr:: mutate(
-        spectralCount = dplyr::n(),
-        rt = stats::median(RTalign, na.rm = TRUE),
-        mass = stats::median(RecalMass, na.rm = TRUE)
-      ) %>%
-      dplyr::ungroup() %>%
-      dplyr::group_by(Gene, pcGroup) %>%
-      dplyr::slice_max(spectralCount) %>%
-      dplyr::slice_min(`E-value`) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
-                    firstAA, lastAA, protLength, Proteoform, AnnType,
-                    MIScore, `#unexpected modifications`, spectralCount)
+    x_collision
   )
 
 }
