@@ -521,8 +521,8 @@ plot_accession_ptm <- function (x,
       legend.key = ggplot2::element_rect(color = "black")
     ) +
     ggplot2::scale_x_continuous(
-      # breaks = c(1, seq(aa_step, prot_len, aa_step)),
-      breaks = floor(seq(from = 1, to = prot_len, length.out = aa_step)),
+      breaks = c(1, seq(aa_step, prot_len, aa_step)),
+      # breaks = floor(seq(from = 1, to = prot_len, length.out = aa_step)),
       expand = c(0, 0),
       limits = c(1 - 0.5, prot_len + 0.5)
     ) +
