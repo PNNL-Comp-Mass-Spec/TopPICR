@@ -4,20 +4,23 @@
 \alias{create_pcg}
 \title{Combines clusters based on mass and retention time}
 \usage{
-create_pcg(x, errors, ppm_cutoff, n_Da, n_rt_sd)
+create_pcg(x, errors, n_mme_sd, n_Da, n_rt_sd)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{cluster} function.}
 
 \item{errors}{A \code{list} output from the \code{calc_error} function.}
 
-\item{ppm_cutoff}{The threshold in ppm that will be used to determine if two
-clusters will be combined.}
+\item{n_mme_sd}{The number of standard deviations used to create an envelope
+around a cluster's centroid in mass space. The standard deviation is in
+ppm. This threshold will be used to determine if two clusters will be
+combined.}
 
 \item{n_Da}{The number of Daltons used to create an envelope around a
 cluster's centroid in mass space. Any cluster whose centroid falls within
 this envelope will be included in the pool of clusters that could be
-combined.}
+combined. This value is used to account for isotopic error and is separate
+from \code{n_mme_sd}.}
 
 \item{n_rt_sd}{The number of standard deviations used to create an envelope
 around a cluster's centroid in retention time space. Any cluster whose

@@ -16,13 +16,16 @@
 #'
 #' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param ppm_cutoff The threshold in ppm that will be used to determine if two
-#'   clusters will be combined.
+#' @param n_mme_sd The number of standard deviations used to create an envelope
+#'   around a cluster's centroid in mass space. The standard deviation is in
+#'   ppm. This threshold will be used to determine if two clusters will be
+#'   combined.
 #'
 #' @param n_Da The number of Daltons used to create an envelope around a
 #'   cluster's centroid in mass space. Any cluster whose centroid falls within
 #'   this envelope will be included in the pool of clusters that could be
-#'   combined.
+#'   combined. This value is used to account for isotopic error and is separate
+#'   from \code{n_mme_sd}.
 #'
 #' @param n_rt_sd The number of standard deviations used to create an envelope
 #'   around a cluster's centroid in retention time space. Any cluster whose
@@ -44,9 +47,12 @@
 #'
 #' @export
 #'
-create_pcg <- function (x, errors, ppm_cutoff, n_Da, n_rt_sd) {
+create_pcg <- function (x, errors, n_mme_sd, n_Da, n_rt_sd) {
 
-  # Change input to n_mme_sd and convert to ppm_cutoff here.
+  # Convert n_mme_sd to ppm. This is necessary so the remainder of the
+  # function does not have to be altered to reflect the change from using a ppm
+  # cutoff to a cutoff in standard deviations.
+  ppm_cutoff <- n_mme_sd * errors$ppm_sd
 
   x_group <- x %>%
     dplyr::filter(cluster != 0) %>%
