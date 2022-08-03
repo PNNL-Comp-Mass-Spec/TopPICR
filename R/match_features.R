@@ -34,6 +34,7 @@
 #'   within the threshold of an identified feature gene/cluster combination.
 #'
 #' @importFrom foreach `%dopar%`
+#' @importFrom magrittr %>%
 #'
 #' @author Evan A Martin
 #'
@@ -41,6 +42,8 @@
 #'
 match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff,
                            summary_fn = "max") {
+
+  # Match between runs ---------------------------------------------------------
 
   centroids_mass <- ms2 %>%
     # Remove the noise cluster. We don't want to impute feature intensity values
@@ -116,6 +119,29 @@ match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff,
       Intensity = the_summary(Intensity, na.rm = TRUE)
     )
 
-  return (output)
+  # Combine MS1 and MS2 features -----------------------------------------------
+
+  ms2 <- ms2 %>%
+    dplyr::group_by(Dataset, CV, Gene, cluster, pcGroup) %>%
+    # Just want to keep the maximum feature intensity per cluster.
+    dplyr::summarize(
+      `Feature intensity` = max(`Feature intensity`, na.rm = TRUE)
+    )
+
+  fused <- dplyr::full_join(output, ms2) %>%
+    dplyr::mutate(
+      Intensity = pmax(Intensity, `Feature intensity`, na.rm = TRUE)
+    ) %>%
+    dplyr::select(-`Feature intensity`)
+
+  fused <- fused %>%
+    # The following code keeps only the highest intensity value when a given
+    # Dataset has multiple Intensity values within a pcGroup. This computation
+    # is carried out within each Gene, CV, and Fraction.
+    dplyr::group_by(Dataset, CV, Gene, pcGroup) %>%
+    dplyr::summarize(Intensity = the_summary(Intensity, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  return (fused)
 
 }
