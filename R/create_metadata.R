@@ -6,14 +6,16 @@
 #'
 #' @param x A \code{data.table} output from the \code{create_pcg} function.
 #'
-#' @param ppm_cutoff A numeric value indicating the mass cutoff in ppm. This
-#'   value is used as the threshold for determining if two clusters (from two
-#'   different genes) have the same centroid in mass space.
+#' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param rt_cutoff A numeric value representing the retention time cutoff in
-#'   seconds. This value is used as the threshold for determining if two
-#'   clusters (from two different genes) have the same centroid in retention
-#'   time space.
+#' @param n_mme_sd A numeric value indicating the number of standard deviations
+#'   in ppm. This value is used as the threshold for determining if two clusters
+#'   (from two different genes) have the same centroid in mass space.
+#'
+#' @param n_rt_sd A numeric value representing the number of standard
+#'   deviations in seconds. This value is used as the threshold for determining
+#'   if two clusters (from two different genes) have the same centroid in
+#'   retention time space.
 #'
 #' @return A \code{data.table} with a row for each unique combination of `Gene`,
 #'   `pcGroup`, and `Proteoform`. The `collision` variable indicates which
@@ -28,7 +30,17 @@
 #'
 #' @export
 #'
-create_mdata <- function (x, ppm_cutoff, rt_cutoff) {
+create_mdata <- function (x, errors, n_mme_sd, n_rt_sd) {
+
+  # Convert n_mme_sd to ppm. This is necessary so the remainder of the
+  # function does not have to be altered to reflect the change from using a ppm
+  # cutoff to a cutoff in standard deviations.
+  ppm_cutoff <- n_mme_sd * errors$ppm_sd
+
+  # Convert n_rt_sd to seconds. This is necessary so the remainder of the
+  # function does not have to be altered to reflect the change from using a
+  # retention time cutoff in seconds to a cutoff in standard deviations.
+  rt_cutoff <- n_rt_sd * errors$rt_sd
 
   # First create the collision variable.
   x_collision <- find_collider(x = x,
