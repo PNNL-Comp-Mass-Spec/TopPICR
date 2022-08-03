@@ -4,7 +4,7 @@
 \alias{match_features}
 \title{Extract feature intensity values from unidentified feature data}
 \usage{
-match_features(ms2, ms1, ppm_cutoff, rt_cutoff, summary_fn = "max")
+match_features(ms2, ms1, errors, n_mme_sd, n_rt_sd, summary_fn = "max")
 }
 \arguments{
 \item{ms2}{A \code{data.table} containing the identified feature data.}
@@ -15,17 +15,20 @@ This data is created from the files output by TopPIC ending with
 variables. These variables are created with the unidentified feature data
 in the \code{align_rt} and \code{recalibrate_mass} functions.}
 
-\item{ppm_cutoff}{A numeric value indicating the mass cutoff in ppm. This
-value is used as the threshold for determining if an unidentified feature
-is close enough in mass to be considered part of an identified feature
-cluster. The mean \code{RecalMass} of all points in the cluster is used for
-the comparison.}
+\item{errors}{A \code{list} output from the \code{calc_error} function.}
 
-\item{rt_cutoff}{A numeric value representing the retention time cutoff in
-seconds. This value is the threshold used to determine if an unidentified
-feature is close enough in retention time to be considered part of an
-identified feature cluster. The mean retention time of all points in the
-cluster is used for the comparison.}
+\item{n_mme_sd}{A numeric value indicating the number of standard
+deviations to use when creating a cutoff in the mass dimension. This
+threshold is used for determining whether an unidentified feature is close
+enough in mass to be considered part of an identified feature cluster. The
+mean \code{RecalMass} of all points in the cluster is used for the
+comparison.}
+
+\item{n_rt_sd}{A numeric value representing the number of standard deviations
+to use when creating a retention time cutoff. This value is the threshold
+used to determine if an unidentified feature is close enough in retention
+time to be considered part of an identified feature cluster. The mean
+retention time of all points in the cluster is used for the comparison.}
 
 \item{summary_fn}{A character string specifying the function to use when
 summarizing the feature intensity. The function must contain the

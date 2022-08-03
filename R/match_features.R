@@ -13,17 +13,20 @@
 #'   variables. These variables are created with the unidentified feature data
 #'   in the \code{align_rt} and \code{recalibrate_mass} functions.
 #'
-#' @param ppm_cutoff A numeric value indicating the mass cutoff in ppm. This
-#'   value is used as the threshold for determining if an unidentified feature
-#'   is close enough in mass to be considered part of an identified feature
-#'   cluster. The mean \code{RecalMass} of all points in the cluster is used for
-#'   the comparison.
+#' @param errors A \code{list} output from the \code{calc_error} function.
 #'
-#' @param rt_cutoff A numeric value representing the retention time cutoff in
-#'   seconds. This value is the threshold used to determine if an unidentified
-#'   feature is close enough in retention time to be considered part of an
-#'   identified feature cluster. The mean retention time of all points in the
-#'   cluster is used for the comparison.
+#' @param n_mme_sd A numeric value indicating the number of standard
+#'   deviations to use when creating a cutoff in the mass dimension. This
+#'   threshold is used for determining whether an unidentified feature is close
+#'   enough in mass to be considered part of an identified feature cluster. The
+#'   mean \code{RecalMass} of all points in the cluster is used for the
+#'   comparison.
+#'
+#' @param n_rt_sd A numeric value representing the number of standard deviations
+#'   to use when creating a retention time cutoff. This value is the threshold
+#'   used to determine if an unidentified feature is close enough in retention
+#'   time to be considered part of an identified feature cluster. The mean
+#'   retention time of all points in the cluster is used for the comparison.
 #'
 #' @param summary_fn A character string specifying the function to use when
 #'   summarizing the feature intensity. The function must contain the
@@ -40,8 +43,18 @@
 #'
 #' @export
 #'
-match_features <- function(ms2, ms1, ppm_cutoff, rt_cutoff,
+match_features <- function(ms2, ms1, errors, n_mme_sd, n_rt_sd,
                            summary_fn = "max") {
+
+  # Convert n_mme_sd to ppm. This is necessary so the remainder of the
+  # function does not have to be altered to reflect the change from using a ppm
+  # cutoff to a cutoff in standard deviations.
+  ppm_cutoff <- n_mme_sd * errors$ppm_sd
+
+  # Convert n_rt_sd to seconds. This is necessary so the remainder of the
+  # function does not have to be altered to reflect the change from using a
+  # retention time cutoff in seconds to a cutoff in standard deviations.
+  rt_cutoff <- n_rt_sd * errors$rt_sd
 
   # Match between runs ---------------------------------------------------------
 
