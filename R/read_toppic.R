@@ -22,34 +22,7 @@
 #' @param ... Additional arguments to \code{\link[readr]{read_tsv}}.
 #'
 #' @return A data.table where all the data from the input files are combined
-#'   row wise. When PrSM data is the input, the following variables are
-#'   added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `Dataset`         | `Data file name`           |
-#'   | `mz`              | `Prsm ID`                  |
-#'   | `Gene`            | `Spectrum ID`              |
-#'   | `isDecoy`         | `Fragmentation`            |
-#'   | `CV`              | `#peaks`                   |
-#'   |                   | `Proteoform ID`            |
-#'   |                   | `Feature score`            |
-#'   |                   | `First residue`            |
-#'   |                   | `Last residue`             |
-#'   |                   | `#variable PTMs`           |
-#'   |                   | `#matched peaks`           |
-#'   |                   | `#matched fragment ions`   |
-#'   |                   | `Spectrum-level Q-value`   |
-#'   |                   | `Proteoform-level Q-value` |
-#'
-#'   When unidentified (MS2) data is the input, the the following variables are
-#'   added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `Dataset`         | `Sample_ID`                |
-#'   | `CV`              | `Minimum_fraction_id`      |
-#'   |                   | `Maximum_fraction_id`      |
+#'   row wise.
 #'
 #' @md
 #'

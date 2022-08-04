@@ -7,7 +7,12 @@
 #' @param x A \code{data.table} output from the \code{recalibrate_mass}
 #'   function.
 #'
-#' @param errors A \code{list} output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   first element of the list contains the standard deviation and median of the
+#'   mass measurement error for each data set. The second element is the
+#'   standard deviation of the mass measurement error across all data sets. The
+#'   third element is the standard deviation of the retention time in seconds
+#'   across all data sets.
 #'
 #' @param method A character string indicating what agglomeration method should
 #'   be used in the hclust function. See \code{\link[stats]{hclust}} for more
@@ -19,14 +24,10 @@
 #'
 #' @param min_size An integer value indicating the minimum number of points a
 #'   cluster must have. All clusters with fewer members than min_size will be
-#'   reclassified as "noise" points.
+#'   reclassified as "noise" points. The cluster assignment for noise points is
+#'   0.
 #'
 #' @return A \code{data.table} with the cluster assignment for each observation.
-#'   The following variables have been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `cluster`         |                            |
 #'
 #' @md
 #'

@@ -9,22 +9,23 @@ recalibrate_mass(x, errors, var_name)
 \arguments{
 \item{x}{The \code{data.table} output from the \code{align_rt} function.}
 
-\item{errors}{A list output from the \code{calc_error} function.}
+\item{errors}{A \code{list} output from the \code{calc_error} function. The
+first element of the list contains the standard deviation and median of the
+mass measurement error for each data set. The second element is the
+standard deviation of the mass measurement error across all data sets. The
+third element is the standard deviation of the retention time in seconds
+across all data sets.}
 
 \item{var_name}{A character string. The name of the mass variable (e.g.,
 \verb{Precursor mass}) that will be recalibrated with the ppm error calculated
 in the \code{calc_error} function.}
 }
 \value{
-A \code{data.table} containing the recalibrated mass variable. The
-following variables were added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{RecalMass} \tab  \cr
-}
+A \code{data.table} containing the recalibrated mass variable.
 }
 \description{
-Calibrates the mass to a reference data set using the error terms returned by
-the \code{calc_error} function.
+Recalibrates the mass using the error terms returned by the \code{calc_error}
+function.
 }
 \author{
 Evan A Martin

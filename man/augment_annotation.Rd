@@ -18,18 +18,7 @@ database (.fasta) file.}
 A \code{data.table} with all protein accessions that match each amino
 acid sequence, not just the highest scoring accession. The number of rows
 in the output could be much larger than the number of rows in the input
-because all accessions for each sequence are included. The following
-variables have been added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{cleanSeq} \tab  \cr
-   \code{AccMap} \tab  \cr
-   \code{UniProtAcc} \tab  \cr
-   \code{protLength} \tab  \cr
-   \code{firstAA} \tab  \cr
-   \code{lastAA} \tab  \cr
-   \code{AnnType} \tab  \cr
-   \code{PercentCoverage} \tab  \cr
-}
+because all accessions for each sequence are included.
 }
 \description{
 All UniProt accessions that match each amino acid sequence will be added to

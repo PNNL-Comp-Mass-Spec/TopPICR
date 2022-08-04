@@ -18,10 +18,7 @@ that will be aligned with the reference data set (e.g., \verb{Feature apex}).}
 }
 \value{
 A \code{data.table} with the retention times aligned to a reference
-data set. The following variables have been added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{RTalign} \tab  \cr
-}
+data set.
 }
 \description{
 Aligns all retention times to a reference data set using the times from the

@@ -7,7 +7,8 @@
 filter_by_count(x, count_within, count, threshold)
 }
 \arguments{
-\item{x}{A \code{data.table} output from \code{augment_annotation}.}
+\item{x}{A \code{data.table} output from either \code{augment_annotation} or
+\code{map_proteoform}.}
 
 \item{count_within}{A character vector specifying the variables that will be
 grouped before counting the number of occurrences of the \code{count}

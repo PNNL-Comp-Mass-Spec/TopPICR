@@ -14,10 +14,9 @@
 #' @return A list with three elements. The first element is the data matrix that
 #'   contains the error terms for the mass and retention times. These terms will
 #'   be used to both recalibrate the mass and cluster the data. The second
-#'   element is the median absolute deviation (MAD) of the error in mass between
-#'   the reference and non-reference data sets. This is reported in ppm. The
-#'   third element is the MAD of the retention time error between the reference
-#'   data set and all other data sets.
+#'   element is the median of the mass measurement error (in ppm) across all
+#'   data sets. The third element is the median of the standard deviation of the
+#'   retention time across all data sets.
 #'
 #' @importFrom magrittr %>%
 #'
@@ -75,23 +74,23 @@ calc_error <- function (x, ref_ds) {
 
 #' Recalibrate the mass
 #'
-#' Calibrates the mass to a reference data set using the error terms returned by
-#' the \code{calc_error} function.
+#' Recalibrates the mass using the error terms returned by the \code{calc_error}
+#' function.
 #'
 #' @param x The \code{data.table} output from the \code{align_rt} function.
 #'
-#' @param errors A list output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   first element of the list contains the standard deviation and median of the
+#'   mass measurement error for each data set. The second element is the
+#'   standard deviation of the mass measurement error across all data sets. The
+#'   third element is the standard deviation of the retention time in seconds
+#'   across all data sets.
 #'
 #' @param var_name A character string. The name of the mass variable (e.g.,
 #'   `Precursor mass`) that will be recalibrated with the ppm error calculated
 #'   in the \code{calc_error} function.
 #'
-#' @return A \code{data.table} containing the recalibrated mass variable. The
-#'   following variables were added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `RecalMass`       |                            |
+#' @return A \code{data.table} containing the recalibrated mass variable.
 #'
 #' @md
 #'

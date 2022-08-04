@@ -3,7 +3,8 @@
 #' Counts the number of samples each proteoform occurs in and filters out any
 #' proteoforms that occur in fewer samples than the threshold.
 #'
-#' @param x A \code{data.table} output from \code{augment_annotation}.
+#' @param x A \code{data.table} output from either \code{augment_annotation} or
+#'   \code{map_proteoform}.
 #'
 #' @param count_within A character vector specifying the variables that will be
 #'   grouped before counting the number of occurrences of the \code{count}

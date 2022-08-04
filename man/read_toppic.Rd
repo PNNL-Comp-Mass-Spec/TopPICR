@@ -23,33 +23,7 @@ voltages (CVs).}
 }
 \value{
 A data.table where all the data from the input files are combined
-row wise. When PrSM data is the input, the following variables are
-added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{Dataset} \tab \verb{Data file name} \cr
-   \code{mz} \tab \verb{Prsm ID} \cr
-   \code{Gene} \tab \verb{Spectrum ID} \cr
-   \code{isDecoy} \tab \code{Fragmentation} \cr
-   \code{CV} \tab \verb{#peaks} \cr
-    \tab \verb{Proteoform ID} \cr
-    \tab \verb{Feature score} \cr
-    \tab \verb{First residue} \cr
-    \tab \verb{Last residue} \cr
-    \tab \verb{#variable PTMs} \cr
-    \tab \verb{#matched peaks} \cr
-    \tab \verb{#matched fragment ions} \cr
-    \tab \verb{Spectrum-level Q-value} \cr
-    \tab \verb{Proteoform-level Q-value} \cr
-}
-
-
-When unidentified (MS2) data is the input, the the following variables are
-added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{Dataset} \tab \code{Sample_ID} \cr
-   \code{CV} \tab \code{Minimum_fraction_id} \cr
-    \tab \code{Maximum_fraction_id} \cr
-}
+row wise.
 }
 \description{
 A wrapper function to the \code{read.delim} function that is specific to the

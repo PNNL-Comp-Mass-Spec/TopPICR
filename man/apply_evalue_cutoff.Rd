@@ -12,18 +12,14 @@ function.}
 
 \item{e_vals}{A vector of three numeric values to be used as E-value cutoffs.
 The E-value cutoffs must be in the order of unique(x$AnnType). For example,
-if unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic" then the E-value
-cutoff for SwissProt must be the first element of e_vals, the E-value
-cutoff for TrEMBL must be the second element of e_vals, and the E-value
-cutoff for VarSplic must be the third element of e_vals.}
+if \code{unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic"} then the
+E-value cutoff for SwissProt must be the first element of e_vals, the
+E-value cutoff for TrEMBL must be the second element of e_vals, and the
+E-value cutoff for VarSplic must be the third element of e_vals.}
 }
 \value{
-A \code{data.table} with the rows removed that will produce an FDR
-below the given threshold at the gene level. The following variables have
-been added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-    \tab \code{isDecoy} \cr
-}
+A \code{data.table} with the rows removed that fall below the E-value
+cutoff.
 }
 \description{
 The \code{control_fdr()} function filters the data by E-value for each

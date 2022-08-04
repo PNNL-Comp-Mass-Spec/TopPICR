@@ -15,19 +15,7 @@
 #' @return A \code{data.table} with all protein accessions that match each amino
 #'   acid sequence, not just the highest scoring accession. The number of rows
 #'   in the output could be much larger than the number of rows in the input
-#'   because all accessions for each sequence are included. The following
-#'   variables have been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `cleanSeq`        |                            |
-#'   | `AccMap`          |                            |
-#'   | `UniProtAcc`      |                            |
-#'   | `protLength`      |                            |
-#'   | `firstAA`         |                            |
-#'   | `lastAA`          |                            |
-#'   | `AnnType`         |                            |
-#'   | `PercentCoverage` |                            |
+#'   because all accessions for each sequence are included.
 #'
 #' @md
 #'

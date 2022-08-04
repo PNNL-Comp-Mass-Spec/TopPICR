@@ -1,7 +1,7 @@
 #' Map proteoforms to proteins
 #'
-#' Add variables for a given proteoform in relation to the proteins it maps to.
-#' For example, the location of the first and last amino acid where the
+#' Add variables for a given proteoform in relation to the protein(s) it maps
+#' to. For example, the location of the first and last amino acid where the
 #' proteoform matches the protein, percentage of the protein the proteoform
 #' covers, and length of the protein.
 #'
@@ -12,21 +12,10 @@
 #'
 #' @param fst_name A character string containing the name of the .fasta file.
 #'
-#' @return A \code{data.table} with all protein accessions that match each amino
-#'   acid sequence, not just the highest scoring accession. The number of rows
-#'   in the output could be much larger than the number of rows in the input
-#'   because all accessions for each sequence are included. The following
-#'   variables have been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `cleanSeq`        |                            |
-#'   | `UniProtAcc`      |                            |
-#'   | `protLength`      |                            |
-#'   | `firstAA`         |                            |
-#'   | `lastAA`          |                            |
-#'   | `AnnType`         |                            |
-#'   | `PercentCoverage` |                            |
+#' @return A \code{data.table} with additional variables containing information
+#'   on the sequence in relation to its parent protein. For example, the
+#'   location of the first and last amino acid, percent coverage of the parent
+#'   protein, and protein length.
 #'
 #' @md
 #'

@@ -18,9 +18,12 @@ A list containing the loess model between each data set and the
 reference data set.
 }
 \description{
-Run the \code{\link[stats]{loess}} function using the values from the
-\code{Feature apex} variable between the reference data set and all other
-data sets.
+Runs the \code{\link[stats]{loess}} function using the values from the
+\code{Feature apex} variable between the reference data set and each of the
+remaining data sets (one at a time). We refer to the data set that is being
+aligned to the reference as the current or working data set. The model is
+created with the proteoforms that are found in both the reference data set
+and the working data set.
 }
 \author{
 Evan A Martin

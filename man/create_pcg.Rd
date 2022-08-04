@@ -9,7 +9,12 @@ create_pcg(x, errors, n_mme_sd, n_Da, n_rt_sd)
 \arguments{
 \item{x}{A \code{data.table} output from the \code{cluster} function.}
 
-\item{errors}{A \code{list} output from the \code{calc_error} function.}
+\item{errors}{A \code{list} output from the \code{calc_error} function. The
+first element of the list contains the standard deviation and median of the
+mass measurement error for each data set. The second element is the
+standard deviation of the mass measurement error across all data sets. The
+third element is the standard deviation of the retention time in seconds
+across all data sets.}
 
 \item{n_mme_sd}{The number of standard deviations used to create an envelope
 around a cluster's centroid in mass space. The standard deviation is in
@@ -29,10 +34,7 @@ clusters that could be combined.}
 }
 \value{
 A \code{data.table} with the updated cluster assignment for each
-gene/cluster combination. The following variables have been added/removed:\tabular{ll}{
-   Added \tab Removed \cr
-   \code{pcGroup} \tab  \cr
-}
+gene/cluster combination.
 }
 \description{
 Compares the centroid of each cluster within a gene and combines the two

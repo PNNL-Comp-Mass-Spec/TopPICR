@@ -17,7 +17,7 @@ reference data set is the one that has the highest number of unique
 \description{
 \code{find_ref_ds} finds the data set that has the highest number of unique
 proteoforms. This data set will be used as the reference data set when
-aligning retention times and recalibrating the mass.
+aligning retention times.
 }
 \author{
 Evan A Martin

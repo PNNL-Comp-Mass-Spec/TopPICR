@@ -16,10 +16,9 @@ set.}
 A list with three elements. The first element is the data matrix that
 contains the error terms for the mass and retention times. These terms will
 be used to both recalibrate the mass and cluster the data. The second
-element is the median absolute deviation (MAD) of the error in mass between
-the reference and non-reference data sets. This is reported in ppm. The
-third element is the MAD of the retention time error between the reference
-data set and all other data sets.
+element is the median of the mass measurement error (in ppm) across all
+data sets. The third element is the median of the standard deviation of the
+retention time across all data sets.
 }
 \description{
 Computes the error in ppm and retention time between each data set and a

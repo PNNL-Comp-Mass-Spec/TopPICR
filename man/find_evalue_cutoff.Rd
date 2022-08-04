@@ -7,11 +7,11 @@
 find_evalue_cutoff(x, fdr_threshold)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{augment_annotation}
-function.}
+\item{x}{A \code{data.table} output from either the \code{augment_annotation}
+or \code{map_proteoform} function.}
 
 \item{fdr_threshold}{A value between 0 and 1 indicating the desired FDR
-control level.}
+level.}
 }
 \value{
 A vector with three elements. These elements correspond to the

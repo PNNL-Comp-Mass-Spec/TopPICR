@@ -3,7 +3,7 @@
 #' Matches unidentified feature intensities with identified feature clusters.
 #' The mass and retention time of each unidentified feature is compared to the
 #' centroid of each identified cluster. If the unidentified feature falls within
-#' the specified ppm threshold it is added to the cluster.
+#' the specified mass and retention time threshold it is added to the cluster.
 #'
 #' @param ms2 A \code{data.table} containing the identified feature data.
 #'
@@ -13,7 +13,12 @@
 #'   variables. These variables are created with the unidentified feature data
 #'   in the \code{align_rt} and \code{recalibrate_mass} functions.
 #'
-#' @param errors A \code{list} output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   first element of the list contains the standard deviation and median of the
+#'   mass measurement error for each data set. The second element is the
+#'   standard deviation of the mass measurement error across all data sets. The
+#'   third element is the standard deviation of the retention time in seconds
+#'   across all data sets.
 #'
 #' @param n_mme_sd A numeric value indicating the number of standard
 #'   deviations to use when creating a cutoff in the mass dimension. This
@@ -43,8 +48,8 @@
 #'
 #' @export
 #'
-match_features <- function(ms2, ms1, errors, n_mme_sd, n_rt_sd,
-                           summary_fn = "max") {
+match_features <- function (ms2, ms1, errors, n_mme_sd, n_rt_sd,
+                            summary_fn = "max") {
 
   # Convert n_mme_sd to ppm. This is necessary so the remainder of the
   # function does not have to be altered to reflect the change from using a ppm

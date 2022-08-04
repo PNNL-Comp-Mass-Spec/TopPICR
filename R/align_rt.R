@@ -4,7 +4,7 @@
 #'
 #' \code{find_ref_ds} finds the data set that has the highest number of unique
 #' proteoforms. This data set will be used as the reference data set when
-#' aligning retention times and recalibrating the mass.
+#' aligning retention times.
 #'
 #' @param x A \code{data.table} output from the \code{infer_pf} function.
 #'
@@ -33,9 +33,12 @@ find_ref_ds <- function (x) {
 
 #' Use \code{loess} to create a model between data sets
 #'
-#' Run the \code{\link[stats]{loess}} function using the values from the
-#' \code{Feature apex} variable between the reference data set and all other
-#' data sets.
+#' Runs the \code{\link[stats]{loess}} function using the values from the
+#' \code{Feature apex} variable between the reference data set and each of the
+#' remaining data sets (one at a time). We refer to the data set that is being
+#' aligned to the reference as the current or working data set. The model is
+#' created with the proteoforms that are found in both the reference data set
+#' and the working data set.
 #'
 #' @param x A \code{data.table} output from the \code{infer_pf} function.
 #'
@@ -139,11 +142,7 @@ form_model <- function (x, ref_ds, ...) {
 #'   that will be aligned with the reference data set (e.g., `Feature apex`).
 #'
 #' @return A \code{data.table} with the retention times aligned to a reference
-#'   data set. The following variables have been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `RTalign`         |                            |
+#'   data set.
 #'
 #' @md
 #'

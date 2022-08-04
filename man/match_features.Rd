@@ -15,7 +15,12 @@ This data is created from the files output by TopPIC ending with
 variables. These variables are created with the unidentified feature data
 in the \code{align_rt} and \code{recalibrate_mass} functions.}
 
-\item{errors}{A \code{list} output from the \code{calc_error} function.}
+\item{errors}{A \code{list} output from the \code{calc_error} function. The
+first element of the list contains the standard deviation and median of the
+mass measurement error for each data set. The second element is the
+standard deviation of the mass measurement error across all data sets. The
+third element is the standard deviation of the retention time in seconds
+across all data sets.}
 
 \item{n_mme_sd}{A numeric value indicating the number of standard
 deviations to use when creating a cutoff in the mass dimension. This
@@ -43,7 +48,7 @@ within the threshold of an identified feature gene/cluster combination.
 Matches unidentified feature intensities with identified feature clusters.
 The mass and retention time of each unidentified feature is compared to the
 centroid of each identified cluster. If the unidentified feature falls within
-the specified ppm threshold it is added to the cluster.
+the specified mass and retention time threshold it is added to the cluster.
 }
 \author{
 Evan A Martin

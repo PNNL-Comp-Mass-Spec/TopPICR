@@ -6,7 +6,12 @@
 #'
 #' @param x A \code{data.table} output from the \code{create_pcg} function.
 #'
-#' @param errors A \code{list} output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   first element of the list contains the standard deviation and median of the
+#'   mass measurement error for each data set. The second element is the
+#'   standard deviation of the mass measurement error across all data sets. The
+#'   third element is the standard deviation of the retention time in seconds
+#'   across all data sets.
 #'
 #' @param n_mme_sd A numeric value indicating the number of standard deviations
 #'   in ppm. This value is used as the threshold for determining if two clusters
@@ -19,7 +24,7 @@
 #'
 #' @return A \code{data.table} with a row for each unique combination of `Gene`,
 #'   `pcGroup`, and `Proteoform`. The `collision` variable indicates which
-#'   clusters have the same centroid across multiple genes. The
+#'   clusters have the same centroid across different genes. The
 #'   \code{data.table} also contains other proteoform information such as
 #'   protein length, UniProt accession, and first and last amino acid among
 #'   others.

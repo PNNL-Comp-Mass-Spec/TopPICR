@@ -5,11 +5,11 @@
 #' Calculates the E-value cutoff that keeps the FDR under the given threshold
 #' within each annotation type.
 #'
-#' @param x A \code{data.table} output from the \code{augment_annotation}
-#'   function.
+#' @param x A \code{data.table} output from either the \code{augment_annotation}
+#'   or \code{map_proteoform} function.
 #'
 #' @param fdr_threshold A value between 0 and 1 indicating the desired FDR
-#'   control level.
+#'   level.
 #'
 #' @return A vector with three elements. These elements correspond to the
 #'   E-value cutoff for the three annotation types (SwissProt, VarSplic, and
@@ -114,18 +114,13 @@ compute_fdr <- function (x) {
 #'
 #' @param e_vals A vector of three numeric values to be used as E-value cutoffs.
 #'   The E-value cutoffs must be in the order of unique(x$AnnType). For example,
-#'   if unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic" then the E-value
-#'   cutoff for SwissProt must be the first element of e_vals, the E-value
-#'   cutoff for TrEMBL must be the second element of e_vals, and the E-value
-#'   cutoff for VarSplic must be the third element of e_vals.
+#'   if \code{unique(x$AnnType) = "SwissProt", "TrEMBL", "VarSplic"} then the
+#'   E-value cutoff for SwissProt must be the first element of e_vals, the
+#'   E-value cutoff for TrEMBL must be the second element of e_vals, and the
+#'   E-value cutoff for VarSplic must be the third element of e_vals.
 #'
-#' @return A \code{data.table} with the rows removed that will produce an FDR
-#'   below the given threshold at the gene level. The following variables have
-#'   been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   |                   | `isDecoy`                  |
+#' @return A \code{data.table} with the rows removed that fall below the E-value
+#'   cutoff.
 #'
 #' @md
 #'

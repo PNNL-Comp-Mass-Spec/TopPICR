@@ -14,7 +14,12 @@
 #'
 #' @param x A \code{data.table} output from the \code{cluster} function.
 #'
-#' @param errors A \code{list} output from the \code{calc_error} function.
+#' @param errors A \code{list} output from the \code{calc_error} function. The
+#'   first element of the list contains the standard deviation and median of the
+#'   mass measurement error for each data set. The second element is the
+#'   standard deviation of the mass measurement error across all data sets. The
+#'   third element is the standard deviation of the retention time in seconds
+#'   across all data sets.
 #'
 #' @param n_mme_sd The number of standard deviations used to create an envelope
 #'   around a cluster's centroid in mass space. The standard deviation is in
@@ -33,11 +38,7 @@
 #'   clusters that could be combined.
 #'
 #' @return A \code{data.table} with the updated cluster assignment for each
-#'   gene/cluster combination. The following variables have been added/removed:
-#'
-#'   | Added             | Removed                    |
-#'   | ----------------- | -------------------------- |
-#'   | `pcGroup`         |                            |
+#'   gene/cluster combination.
 #'
 #' @md
 #'
