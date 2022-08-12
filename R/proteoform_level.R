@@ -18,82 +18,263 @@
 #'
 set_pf_level <- function (x) {
 
-  x <- x %>%
-    dplyr::mutate(
-      PTMScore = stringr::str_replace_all(
-        Proteoform, "\\.\\(([A-Z])\\)\\[Acetyl\\]", ""
-      ),
-      PTMScore = stringr::str_replace_all(
-        PTMScore,
-        "\\(\\(C\\)\\[Carbamidomethyl\\]\\(C\\)\\[Carbamidomethyl\\]\\)",
-        "\\(C\\)"
-      ),
-      PTMScore = stringr::str_replace_all(
-        PTMScore, "\\(\\(C\\)\\[Carbamidomethyl\\]\\)", "\\(C\\)"
-      ),
-      PTMScore = stringr::str_replace_all(
-        PTMScore, "\\(C\\)\\[Carbamidomethyl\\]", ""
-      ),
-      PTMScore = stringr::str_replace_all(PTMScore, "(?=\\[).*?(?<=\\])", ""),
-      PTMScore = stringr::str_replace_all(PTMScore, "\\(\\(M", "\\(M"),
-      PTMScore = stringr::str_replace_all(PTMScore, "M\\)\\)", "M\\)"),
-      PTMScore = gsub("[[:digit:]]+", "", PTMScore),
-      PTMScore = gsub( "[[\\.]]","", PTMScore),
-      PTMScore = gsub( "\\[","", PTMScore),
-      PTMScore = gsub( "\\-","", PTMScore),
-      PTMScore = gsub("\\.","", PTMScore),
-      PTMScore = stringr::str_replace_all(PTMScore, "(?<=\\)).*(?=\\()", ""),
-      PTMScore = stringr::str_replace_all(PTMScore, "\\)\\(", ""),
-      PTMScore = stringr::str_extract(PTMScore, "(?<=\\().*(?=\\))"),
-      PTMScore = stringr::str_replace_all(PTMScore, "[[:punct:]]", "")
-    ) %>%
+  x  <- x %>% dplyr::mutate(
+    PTMScore = stringr::str_replace_all(
+      Proteoform, "\\.\\(([A-J,L-Z])\\)\\[Acetyl\\]", ""
+    ),
+    PTMScore = stringr::str_replace_all(
+      PTMScore,
+      "\\(\\(C\\)\\[Carbamidomethyl\\]\\(C\\)\\[Carbamidomethyl\\]\\)",
+      "\\(C\\)"
+    ),
+    PTMScore = stringr::str_replace_all(
+      PTMScore, "\\(\\(C\\)\\[Carbamidomethyl\\]\\)", "\\(C\\)"
+    ),
+    PTMScore = stringr::str_replace_all(
+      PTMScore, "\\(C\\)\\[Carbamidomethyl\\]", ""
+    ),
+    PTMScore = stringr::str_replace_all(PTMScore, "(?=\\[).*?(?<=\\])", ""),
+    PTMScore = stringr::str_replace_all(PTMScore, "\\(\\(M", "\\(M"),
+    PTMScore = stringr::str_replace_all(PTMScore, "M\\)\\)", "M\\)"),
+    PTMScore = gsub("[[:digit:]]+", "", PTMScore),
+    PTMScore = gsub("[[\\.]]", "", PTMScore),
+    PTMScore = gsub("\\[", "", PTMScore),
+    PTMScore = gsub("\\-", "", PTMScore),
+    PTMScore = gsub("\\.", "", PTMScore),
+    PTMScore = stringr::str_replace_all(PTMScore, "(?<=\\)).*(?=\\()", ""),
+    PTMScore = stringr::str_replace_all(PTMScore, "\\)\\(", ""),
+    PTMScore = stringr::str_extract(PTMScore, "(?<=\\().*(?=\\))"),
+    PTMScore = stringr::str_replace_all(PTMScore, "[[:punct:]]", "")
+  ) %>%
     dplyr::mutate(
       `Proteoform Level` = dplyr::case_when(
-        ## No ambiguity
-        `#unexpected modifications` == 0 & AccMap == 1 ~ "1",
-        ## TopPIC error assignment
+        MIScore == "-" &
+          `#unexpected modifications` ==
+          0 &
+          AccMap == 1  &
+          is.na(PTMScore) &
+          is.na(`Special amino acids`) ~ "1",
         stringr::str_detect(MIScore, "\\[\\]") ~ "5",
-        ## No ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 1 & AccMap == 1 &
-           nchar(PTMScore) == 1) ~ "1",
-        ## No ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 2 & AccMap == 1 &
-           nchar(PTMScore) == 2) ~ "1",
-        ## PTM localization ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 1 & AccMap == 1 &
-           nchar(PTMScore) > 1) ~ "2A",
-        ## PTM localization ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 2 & AccMap == 1 &
-           nchar(PTMScore) > 2) ~ "2A",
-        ## PTM identification ambiguity
-        (MIScore == "-" & `#unexpected modifications` == 1 & AccMap == 1 &
-           nchar(PTMScore) == 1) ~ "2B",
-        ### Gene of origin ambiguity
-        `#unexpected modifications` == 0 & AccMap > 1 ~ "2D",
-        ## Gene ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 1 & AccMap > 1 &
-           nchar(PTMScore) == 1) ~ "2D",
-        ## Gene ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 1 & AccMap > 1 &
-           is.na(PTMScore)) ~ "2D",
-        ## Gene ambiguity
-        (MIScore != "-" & `#unexpected modifications` == 2 & AccMap > 1 &
-           nchar(PTMScore) == 2) ~ "2D",
-        ## PTM identification and gene ambiguity
-        (MIScore == "-" & `#unexpected modifications` == 1 & AccMap > 1 &
-           nchar(PTMScore) == 1) ~ "3E",
-        ## PTM identification and localization ambiguity
-        (MIScore == "-" & `#unexpected modifications` == 1 & AccMap == 1 &
-           nchar(PTMScore) > 1) ~ "3A",
-        ## Gene ambiguity and localization of PTM
-        (MIScore != "-" & `#unexpected modifications` == 1 & AccMap > 1 &
-           nchar(PTMScore) > 1) ~ "3D",
-        ## Gene ambiguity and localization of PTM
-        (MIScore != "-" & `#unexpected modifications` == 2 & AccMap > 1 &
-           nchar(PTMScore) > 2) ~ "3D",
-        ## Gene ambiguity, PTM ambiguity, and localization ambiguity
-        (MIScore == "-" & `#unexpected modifications` == 1 & AccMap > 1 &
-           nchar(PTMScore) > 1) ~ "4B"
+        (
+          MIScore != "-" & `#unexpected modifications` ==
+            0 &
+            AccMap == 1 & nchar(PTMScore) == 1 &
+            is.na(`Special amino acids`)
+        ) ~ "1",
+        (
+          MIScore !=
+            "-" &
+            `#unexpected modifications` == 0 & AccMap == 1 &
+            nchar(PTMScore) == 2 &
+            is.na(`Special amino acids`)
+        ) ~ "1",
+        (
+          MIScore != "-" & `#unexpected modifications` ==
+            0 &
+            AccMap == 1 & nchar(PTMScore) > 1 &
+            is.na(`Special amino acids`)
+        ) ~ "2A",
+        (
+          MIScore !=
+            "-" &
+            `#unexpected modifications` == 1 & AccMap == 1 &
+            nchar(PTMScore) > 2 &
+            is.na(`Special amino acids`)
+        ) ~ "2A",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            1 &
+            AccMap == 1 &
+            nchar(PTMScore) == 1 &
+            is.na(`Special amino acids`)
+        ) ~ "2B",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            2 &
+            AccMap == 1 &
+            nchar(PTMScore) == 2 &
+            is.na(`Special amino acids`)
+        ) ~ "2B",
+        (MIScore !=
+           "-" &
+           `#unexpected modifications` ==
+           0 &
+           AccMap == 1 &
+           !is.na(`Special amino acids`)
+        ) ~ "2C",
+        ( MIScore !=
+            "-" &
+            `#unexpected modifications` ==
+            1 &
+            AccMap == 1 &
+            nchar(PTMScore) == 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "2C",
+        (  MIScore != "-" & `#unexpected modifications` ==
+             0 &
+             AccMap > 1 & nchar(PTMScore) == 1 &
+             is.na(`Special amino acids`)
+        ) ~ "2D",
+        (
+          MIScore !=
+            "-" &
+            `#unexpected modifications` == 0 & AccMap > 1 &
+            is.na(PTMScore) &
+            is.na(`Special amino acids`)
+        ) ~ "2D",
+        (
+          MIScore != "-" & `#unexpected modifications` ==
+            1 &
+            AccMap > 1 & nchar(PTMScore) == 2 &
+            is.na(`Special amino acids`)
+        ) ~ "2D",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            0 &
+            AccMap > 1 & is.na(PTMScore) &
+            is.na(`Special amino acids`)
+        ) ~ "2D",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            1 &
+            AccMap == 1 & nchar(PTMScore) > 1 &
+            is.na(`Special amino acids`)
+        ) ~ "3A",
+        (
+          !MIScore == "-" & `#unexpected modifications` ==
+            0 &
+            AccMap == 1 & nchar(PTMScore) > 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "3B",
+        (
+          !MIScore == "-" & `#unexpected modifications` ==
+            1 &
+            AccMap == 1 & nchar(PTMScore) > 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "3B",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            1 &
+            AccMap == 1 & nchar(PTMScore) == 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "3C",
+        (
+          MIScore == "-" & `#unexpected modifications` ==
+            2 &
+            AccMap == 1 & nchar(PTMScore) == 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "3C",
+        (
+          MIScore !=
+            "-" &
+            `#unexpected modifications` == 0 & AccMap > 1 &
+            nchar(PTMScore) > 1 &
+            is.na(`Special amino acids`)
+        ) ~ "3D",
+        (
+          MIScore != "-" & `#unexpected modifications` ==
+            1 &
+            AccMap > 1 & nchar(PTMScore) > 2 &
+            is.na(`Special amino acids`)
+        ) ~ "3D",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) == 1 &
+            is.na(`Special amino acids`)
+        ) ~ "3E",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 2 & AccMap > 1 &
+            nchar(PTMScore) == 2 &
+            is.na(`Special amino acids`)
+        ) ~ "3E",
+        (
+          !MIScore ==
+            "-" &
+            `#unexpected modifications` == 0 & AccMap > 1 &
+            nchar(PTMScore) == 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "3F",
+        (
+          !MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) == 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "3F",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 0 & AccMap > 1 &
+            is.na(PTMScore) &
+            !is.na(`Special amino acids`)
+        ) ~ "3F",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap == 1 &
+            nchar(PTMScore) > 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "4A",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 2 & AccMap == 1 &
+            nchar(PTMScore) > 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "4A",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) > 1 &
+            is.na(`Special amino acids`)
+        ) ~ "4B",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 2 & AccMap > 1 &
+            nchar(PTMScore) > 2 &
+            is.na(`Special amino acids`)
+        ) ~ "4B",
+        (
+          !MIScore ==
+            "-" &
+            `#unexpected modifications` == 0 & AccMap > 1 &
+            nchar(PTMScore) > 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "4C",
+        (
+          !MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) > 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "4C",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) == 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "4D",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 2 & AccMap > 1 &
+            nchar(PTMScore) == 2 &
+            !is.na(`Special amino acids`)
+        ) ~ "4D",
+        (
+          MIScore ==
+            "-" &
+            `#unexpected modifications` == 1 & AccMap > 1 &
+            nchar(PTMScore) > 1 &
+            !is.na(`Special amino acids`)
+        ) ~ "5",
       )
     ) %>%
     dplyr::select(-PTMScore)
