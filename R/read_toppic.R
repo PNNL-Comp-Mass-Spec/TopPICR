@@ -105,6 +105,7 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           `#unexpected modifications` = `#unexpected modifications`,
           AccMap = `#Protein hits`,
           MIScore = MIScore,
+          `Special amino acids` = `Special amino acids`,
           Proteoform = Proteoform,
           UniProtAcc = `Protein accession`
         ) %>%
@@ -147,6 +148,7 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           `#unexpected modifications`,
           AccMap,
           MIScore,
+          `Special amino acids`,
           Proteoform,
           UniProtAcc,
           Gene,
