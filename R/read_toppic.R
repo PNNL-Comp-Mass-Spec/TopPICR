@@ -88,6 +88,7 @@ read_toppic <- function (file_path, file_name, faims, ...) {
       the_list[[e]] <- readr::read_tsv(
         file = file.path(file_path, file_name[[e]]),
         skip = n_prelim,
+        col_types = readr::cols(`Special amino acids` = readr::col_character()),
         ...
       ) %>%
         # Rename all MS2 TopPIC variables that are used by TopPICR functions.
@@ -105,8 +106,8 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           `#unexpected modifications` = `#unexpected modifications`,
           AccMap = `#Protein hits`,
           MIScore = MIScore,
-          `Special amino acids` = `Special amino acids`,
           Proteoform = Proteoform,
+          `Special amino acids` = `Special amino acids`,
           UniProtAcc = `Protein accession`
         ) %>%
         # Only keep rows that have a gene in the protein description. Rows
@@ -148,11 +149,20 @@ read_toppic <- function (file_path, file_name, faims, ...) {
           `#unexpected modifications`,
           AccMap,
           MIScore,
-          `Special amino acids`,
           Proteoform,
+          `Special amino acids`,
           UniProtAcc,
           Gene,
           isDecoy
+        ) %>%
+        # If there is not a special amino acid change the NA to -. This is
+        # necessary otherwise special amino acids get incorrectly copied in the
+        # next step.
+        dplyr::mutate(
+          `Special amino acids` = dplyr::case_when(
+            is.na(`Special amino acids`) ~ "-",
+            TRUE ~ as.character(`Special amino acids`)
+          )
         ) %>%
         # Fill in missing values for all accessions that match a given sequence.
         # This step is necessary because TopPIC only includes information for
