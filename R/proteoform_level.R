@@ -18,6 +18,8 @@
 #'
 set_pf_level <- function (x) {
 
+  x$`Special amino acids`[x$`Special amino acids` == "-"] <- NA
+  
   x  <- x %>% dplyr::mutate(
     PTMScore = stringr::str_replace_all(
       Proteoform, "\\.\\(([A-J,L-Z])\\)\\[Acetyl\\]", ""
