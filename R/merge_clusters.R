@@ -64,7 +64,8 @@ create_pcg <- function (x, errors, n_mme_sd, n_Da, n_rt_sd) {
                          n_Da = n_Da,
                          rt_sd = errors$rt_sd,
                          n_rt_sd = n_rt_sd)
-    )
+    ) %>%
+    dplyr::ungroup()
 
 }
 
