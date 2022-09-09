@@ -112,6 +112,14 @@ set_pf_level <- function (x) {
             nchar(PTMScore) == 2 &
             !is.na(`Special amino acids`)
         ) ~ "2C",
+        ( MIScore ==
+            "-" &
+            `#unexpected modifications` ==
+            0 &
+            AccMap == 1 &
+            is.na(PTMScore) &
+            !is.na(`Special amino acids`)
+        ) ~ "2C",
         (  MIScore != "-" & `#unexpected modifications` ==
              0 &
              AccMap > 1 & nchar(PTMScore) == 1 &
