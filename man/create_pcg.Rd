@@ -4,7 +4,7 @@
 \alias{create_pcg}
 \title{Combines clusters based on mass and retention time}
 \usage{
-create_pcg(x, errors, n_mme_sd, n_Da, n_rt_sd)
+create_pcg(x, errors, n_mme_sd, n_Da = 4, n_rt_sd)
 }
 \arguments{
 \item{x}{A \code{data.table} output from the \code{cluster} function.}
