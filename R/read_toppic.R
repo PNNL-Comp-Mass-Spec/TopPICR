@@ -30,7 +30,7 @@
 #'
 #' @export
 #'
-read_toppic <- function (file_path, file_name, faims, ...) {
+read_toppic <- function (file_path, file_name, faims = FALSE, ...) {
 
   # Create a list that will be used to hold the data from each file.
   the_list <- vector(mode = "list",
@@ -74,20 +74,41 @@ read_toppic <- function (file_path, file_name, faims, ...) {
     # read the data rows into R.
     for (e in 1:length(file_name)) {
 
-      # Find the number of lines preceding the header.
-      the_lines <- system2(command = "grep",
-                           args = paste(" -n '^\\*' ",
-                                        file_path,
-                                        file_name[[e]],
-                                        sep = ""),
-                           stdout = TRUE)
-      n_lines <- length(the_lines)
-      n_prelim <- as.numeric(gsub("[^{0-9}]*", "", the_lines[[n_lines]]))
+      # Find the line where the header starts. This will be used to skip the
+      # lines containing the TopPIC parameter values when reading the data into
+      # R.
+
+      # Start by reading in the first 100 lines. If the header isn't found in
+      # the first 200 lines we will add 50 lines at a time until we find it.
+      lines_to_read <- 200
+
+      while (TRUE) {
+
+        # Read in the first lines_to_read. Each line will be stored as a
+        # character string in a vector. We will search for the index of the
+        # element containing the string "Data file name". This index will then
+        # be used to skip any lines preceding the header when reading in the
+        # data.
+        the_lines <- readr::read_lines(
+          file = file.path(file_path, file_name[[e]]),
+          n_max = lines_to_read
+        )
+
+        # Find the index of the line with the string "Data file name"
+        n_lines <- stringr::str_which(the_lines, "Data file name")
+
+        # If we found the header exit the while loop.
+        if (length(n_lines) != 0) break
+
+        # Add 50 more lines to the number of lines that will be read into R.
+        lines_to_read <- lines_to_read + 50
+
+      }
 
       # Read in the data skipping the lines preceding the header.
       the_list[[e]] <- readr::read_tsv(
         file = file.path(file_path, file_name[[e]]),
-        skip = n_prelim,
+        skip = n_lines - 1,
         col_types = readr::cols(`Special amino acids` = readr::col_character()),
         ...
       ) %>%

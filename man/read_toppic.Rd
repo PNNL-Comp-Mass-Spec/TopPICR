@@ -4,7 +4,7 @@
 \alias{read_toppic}
 \title{Read in TopPIC files}
 \usage{
-read_toppic(file_path, file_name, faims, ...)
+read_toppic(file_path, file_name, faims = FALSE, ...)
 }
 \arguments{
 \item{file_path}{A character string specifying the path to the folder with
