@@ -95,7 +95,7 @@ read_toppic <- function (file_path, file_name, faims = FALSE, ...) {
         )
 
         # Find the index of the line with the string "Data file name"
-        n_lines <- stringr::str_which(the_lines, "Data file name")
+        n_lines <- stringr::str_which(the_lines, "^Data file name\tPrsm ID")
 
         # If we found the header exit the while loop.
         if (length(n_lines) != 0) break
