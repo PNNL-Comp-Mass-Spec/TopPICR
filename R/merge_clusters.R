@@ -48,7 +48,7 @@
 #'
 #' @export
 #'
-create_pcg <- function (x, errors, n_mme_sd, n_Da = 4, n_rt_sd) {
+create_pcg <- function (x, errors, n_mme_sd = 3, n_Da = 4, n_rt_sd = 3) {
 
   # Convert n_mme_sd to ppm. This is necessary so the remainder of the
   # function does not have to be altered to reflect the change from using a ppm
