@@ -7,7 +7,7 @@
 form_model(x, ref_ds, ...)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{infer_pf} function.}
+\item{x}{A \code{data.table} output from the \code{infer_prot} function.}
 
 \item{ref_ds}{A character string specifying the reference data set.}
 

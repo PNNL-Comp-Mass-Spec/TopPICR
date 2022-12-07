@@ -6,7 +6,7 @@
 #' proteoforms. This data set will be used as the reference data set when
 #' aligning retention times.
 #'
-#' @param x A \code{data.table} output from the \code{infer_pf} function.
+#' @param x A \code{data.table} output from the \code{infer_prot} function.
 #'
 #' @return A character vector containing the name of the reference data set. The
 #'   reference data set is the one that has the highest number of unique
@@ -40,7 +40,7 @@ find_ref_ds <- function (x) {
 #' created with the proteoforms that are found in both the reference data set
 #' and the working data set.
 #'
-#' @param x A \code{data.table} output from the \code{infer_pf} function.
+#' @param x A \code{data.table} output from the \code{infer_prot} function.
 #'
 #' @param ref_ds A character string specifying the reference data set.
 #'
@@ -132,7 +132,7 @@ form_model <- function (x, ref_ds, ...) {
 #' \code{Feature apex} column. The \code{loess} function from the \code{stats}
 #' package is used for the alignment.
 #'
-#' @param x A \code{data.table} output from the \code{infer_pf} function.
+#' @param x A \code{data.table} output from the \code{infer_prot} function.
 #'
 #' @param model A list containing the model output by the \code{loess} function.
 #'   The elements of this list are the models between the reference data set and

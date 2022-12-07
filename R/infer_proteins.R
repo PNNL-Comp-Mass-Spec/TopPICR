@@ -1,6 +1,6 @@
-#' Proteoform inference
+#' Protein inference
 #'
-#' The \code{infer_pf} function finds the smallest set of UniProt accessions
+#' The \code{infer_prot} function finds the smallest set of UniProt accessions
 #' (\code{UniProtAcc}) that maps to the largest number of amino acid sequences
 #' (\code{cleanSeq}).
 #'
@@ -18,7 +18,7 @@
 #'
 #' @export
 #'
-infer_pf <- function (x) {
+infer_prot <- function (x) {
 
   # Keep three columns of the unique rows of x.
   y <- unique(x[,c("cleanSeq","UniProtAcc","AnnType")])
@@ -46,7 +46,7 @@ infer_pf <- function (x) {
 
 }
 
-# infer_pf auxiliary functions -------------------------------------------------
+# infer_prot auxiliary functions -------------------------------------------------
 
 # @author Vlad Petyuk
 inference <- function (x) {

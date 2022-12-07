@@ -7,7 +7,7 @@
 align_rt(x, model, var_name)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{infer_pf} function.}
+\item{x}{A \code{data.table} output from the \code{infer_prot} function.}
 
 \item{model}{A list containing the model output by the \code{loess} function.
 The elements of this list are the models between the reference data set and

@@ -7,7 +7,7 @@
 find_ref_ds(x)
 }
 \arguments{
-\item{x}{A \code{data.table} output from the \code{infer_pf} function.}
+\item{x}{A \code{data.table} output from the \code{infer_prot} function.}
 }
 \value{
 A character vector containing the name of the reference data set. The
