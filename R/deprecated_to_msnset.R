@@ -10,11 +10,11 @@
 #'
 #' @return An MSnSet object
 #'
-#' @export
+# ' @export
 #'
 #' @author Evan A Martin
 #'
-to_msnset <- function (combined, meta) {
+deprecated_to_msnset <- function (combined, meta) {
 
   # Check if FAIMS data. If not there is no need to have CV in the feature name.
   if (combined$CV[[1]] == "noFAIMS") {
