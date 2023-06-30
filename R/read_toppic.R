@@ -1,4 +1,4 @@
-#' Read in TopPIC files
+#' Read in TopPIC files. NOTE THE FUNCTION MAYBE OUTDATED. NOT SURE IF IT WORKS WITH THE NEW VERSION OF THE TopPIC.
 #'
 #' A wrapper function to the \code{read.delim} function that is specific to the
 #' files output by TopPIC. Metadata is always included at the beginning of the
