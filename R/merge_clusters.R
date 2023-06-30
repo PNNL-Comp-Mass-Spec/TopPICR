@@ -59,7 +59,7 @@ create_pcg <- function (x, errors, n_mme_sd = 3, n_Da = 4, n_rt_sd = 3) {
     dplyr::filter(cluster != 0) %>%
     dplyr::group_by(Gene) %>%
     dplyr::mutate(
-      pcGroup = groupate(x = dplyr::across(),
+      pcGroup = groupate(x = dplyr::across(.cols = everything()),
                          ppm_cutoff = ppm_cutoff,
                          n_Da = n_Da,
                          rt_sd = errors$rt_sd,
