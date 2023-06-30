@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_toppic.R
 \name{read_toppic}
 \alias{read_toppic}
-\title{Read in TopPIC files}
+\title{Read in TopPIC files. NOTE THE FUNCTION MAYBE OUTDATED. NOT SURE IF IT WORKS WITH THE NEW VERSION OF THE TopPIC.}
 \usage{
 read_toppic(file_path, file_name, faims = FALSE, ...)
 }
