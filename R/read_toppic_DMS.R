@@ -60,6 +60,16 @@ read_TopPIC_DMS <- function(data_package_num){
         is.na(`Special amino acids`) ~ "-",
         TRUE ~ as.character(`Special amino acids`)))
 
+
+  # Extract just the UniProt accession. This is the second element (when
+  # splitting by |) of the `Protein accession` variable output by TopPIC.
+  ids <- ids %>%
+    dplyr::mutate(
+      UniProtAcc = case_when(grepl("\\|", UniProtAcc) ~
+                               purrr::map_chr(stringr::str_split(UniProtAcc, "\\|"), purrr::pluck, 2),
+                             TRUE ~ UniProtAcc))
+
+
   # Only keep variables we need throughout TopPICR.
   ids <- ids %>%
     dplyr::select(
