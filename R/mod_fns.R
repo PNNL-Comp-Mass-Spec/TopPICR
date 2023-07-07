@@ -260,18 +260,34 @@ get_mass_annotation_table <- function (x,
                     mod_name))
 }
 
-# recursive centroiding
+# # recursive centroiding
+# .centroiding <- function(x, centroid_tol, cs){
+#   if(nrow(x) == 0){
+#     return(cs)
+#   }else{
+#     i <- which.max(x$y)
+#     ci <- x$x[i] # centroid
+#     idxs <- abs(x$x - ci) < centroid_tol
+#     x <- x[!idxs,]
+#     .centroiding(x, centroid_tol, c(cs, ci))
+#   }
+# }
+#
+
+# iterative centroiding
 .centroiding <- function(x, centroid_tol, cs){
-  if(nrow(x) == 0){
-    return(cs)
-  }else{
+  # cs <- numeric(0)
+  while(nrow(x) > 0){
     i <- which.max(x$y)
     ci <- x$x[i] # centroid
     idxs <- abs(x$x - ci) < centroid_tol
     x <- x[!idxs,]
-    .centroiding(x, centroid_tol, c(cs, ci))
+    cs <- c(cs, ci)
   }
+  return(cs)
 }
+
+
 
 .get_matching_mod <- function(x, reference_table, matching_tol){
   d <- reference_table$mass - x
