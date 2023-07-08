@@ -62,15 +62,6 @@ read_TopPIC_DMS <- function(data_package_num){
 
 
 
-
-  idss <- ids[1700000:1847098,] %>%
-    dplyr::mutate(
-      UniProtAcc = case_when(grepl("\\|", UniProtAcc) ~
-                               purrr::map_chr(stringr::str_split(UniProtAcc, "\\|"), purrr::pluck, 2),
-                                       TRUE ~ UniProtAcc))
-
-
-
   # Extract just the UniProt accession. This is the second element (when
   # splitting by |) of the `Protein accession` variable output by TopPIC.
   ids <- ids %>%
