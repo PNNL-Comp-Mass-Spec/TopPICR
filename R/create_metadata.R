@@ -70,7 +70,7 @@ create_mdata <- function (x, errors, n_mme_sd, n_rt_sd) {
         round(as.numeric(ModMass), digits = 0)
       )
     ) %>%
-    dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass, MIScore) %>%
+    dplyr::group_by(Gene, pcGroup, cleanSeq, ModMass) %>%
     dplyr:: mutate(
       spectralCount = dplyr::n(),
       rt = stats::median(RTalign, na.rm = TRUE),
@@ -83,7 +83,7 @@ create_mdata <- function (x, errors, n_mme_sd, n_rt_sd) {
     dplyr::ungroup() %>%
     dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
                   firstAA, lastAA, protLength, Proteoform, AnnType,
-                  MIScore, `#unexpected modifications`, spectralCount)
+                  `#unexpected modifications`, spectralCount)
 
   # Return the metadata data frame.
   return (
