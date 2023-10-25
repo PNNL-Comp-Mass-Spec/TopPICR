@@ -149,7 +149,7 @@ map_peptides_to_fasta <- function (peptides,
                          row.names = NULL,
                          check.names = FALSE)
 
-  cl <- parallel::makeCluster(numCores)
+  cl <- parallel::makeCluster(min(125, numCores))
 
   # Add the pipe and the find_matching_accessions function so they can be used
   # in parallel.
