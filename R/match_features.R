@@ -93,6 +93,7 @@ match_features <- function (ms2, ms1, errors, n_mme_sd, n_rt_sd,
 
   # Prepare to run in parallel.
   cores <- parallel::detectCores() - 1
+  cores <- min(125, cores) # can't exceed 125 in R
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl)
 
