@@ -172,50 +172,86 @@ extract_mods <- function (pform) {
 
 }
 
+# @export
+#
+# This piece of code isn't working. Will delete with the next clean-up.
+# Leaving it for "just in case".
+#
+# annotate_Nterm_acetyls <- function (x,
+#                                     nterm_tol = 3,
+#                                     acetyl_id = "Acetyl") {
+#
+#   for (i in 1:nrow(x)) {
+#
+#     # Determine if an acetyl could be an n-terminus acetyl.
+#     if (x[i, "firstAA"] <= nterm_tol) {
+#
+#
+#       # Check if any mods are present.
+#       if (length(x[i, "mods"][[1]][[1]]$mods) > 0) {
+#
+#         # NOTE: For the rest of the if statement we will work with just the
+#         # first element of mods, mods_left_border, and mods_str because there
+#         # could be multiple mods. We are only interested in the first mod if it
+#         # is Acetyl.
+#
+#         # Check if the mod is acetyl and if it is on the first amino acid.
+#         if (x[i, "mods"][[1]][[1]]$mods[1] == acetyl_id &&
+#             x[i, "mods"][[1]][[1]]$mods_left_border[1] == 1) {
+#
+#           # Change from Acetyl to N-Acetyl because the current acetyl occurs on
+#           # the n-terminus.
+#           x[i, "mods"][[1]][[1]]$mods[1] <- paste("N-", acetyl_id, sep="")
+#
+#           # Update the name of the mod in the mods_str vector. This will become
+#           # N-Acetyl@<start position>-<end position>
+#           x[i, "mods"][[1]][[1]]$mods_str[1] <- paste(
+#             "N-", x[i, "mods"][[1]][[1]]$mods_str[1], sep = ""
+#           )
+#
+#         }
+#
+#       }
+#
+#     }
+#
+#   }
+#
+#   return (x)
+#
+# }
+
+
+
 #' @export
-annotate_Nterm_acetyls <- function (x,
-                                    nterm_tol = 3,
-                                    acetyl_id = "Acetyl") {
+annotate_Nterm_acetyls <- function(x, nterm_tol = 3, acetyl_id = "Acetyl"){
 
-  for (i in 1:nrow(x)) {
+  temp_mod_names <- "mods"
+  if("mod_names" %in% names(x$mods[[1]]))
+    temp_mod_names <- "mod_names"
 
-    # Determine if an acetyl could be an n-terminus acetyl.
-    if (x[i, "firstAA"] <= nterm_tol) {
-
-
-      # Check if any mods are present.
-      if (length(x[i, "mods"][[1]][[1]]$mods) > 0) {
-
-        # NOTE: For the rest of the if statement we will work with just the
-        # first element of mods, mods_left_border, and mods_str because there
-        # could be multiple mods. We are only interested in the first mod if it
-        # is Acetyl.
-
-        # Check if the mod is acetyl and if it is on the first amino acid.
-        if (x[i, "mods"][[1]][[1]]$mods[1] == acetyl_id &&
-            x[i, "mods"][[1]][[1]]$mods_left_border[1] == 1) {
-
-          # Change from Acetyl to N-Acetyl because the current acetyl occurs on
-          # the n-terminus.
-          x[i, "mods"][[1]][[1]]$mods[1] <- paste("N-", acetyl_id, sep="")
-
-          # Update the name of the mod in the mods_str vector. This will become
-          # N-Acetyl@<start position>-<end position>
-          x[i, "mods"][[1]][[1]]$mods_str[1] <- paste(
-            "N-", x[i, "mods"][[1]][[1]]$mods_str[1], sep = ""
-          )
-
+  for(i in 1:nrow(x)){
+    if(x[i,"firstAA"] <= nterm_tol){
+      y <- x[i,"mods"][[1]]
+      if(length(y$mods) > 0){
+        if(y$mods[1] == acetyl_id & y$mods_left_border[1] == 1){
+          y$mods[1] <- paste("N-", acetyl_id, sep="")
+          y[[temp_mod_names]][1] <- y$mods[1]
+          posi_str <- map2_chr(y$mods_left_border, y$mods_right_border, paste, sep="-")
+          y$mods_str <- paste(map2_chr(y[[temp_mod_names]], posi_str, paste, sep="@"), collapse=", ")
+          x[i,"mods"][[1]] <- list(y)
         }
-
       }
-
     }
-
   }
-
-  return (x)
-
+  return(x)
 }
+
+
+
+
+
+
 
 #' @export
 get_mass_annotation_table <- function (x,
