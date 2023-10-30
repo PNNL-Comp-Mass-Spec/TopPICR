@@ -254,6 +254,51 @@ annotate_Nterm_acetyls <- function(x, nterm_tol = 3, acetyl_id = "Acetyl"){
 
 
 #' @export
+annotate_modifications <- function(m,
+                                   mod_file = "TopPIC_Dynamic_Mods.txt",
+                                   mod_path = ".",
+                                   use_unimod = TRUE,
+                                   centroid_tol = 0.3,
+                                   matching_tol = 0.1,
+                                   nterm_tol = 3,
+                                   acetyl_id = "Acetyl"){
+
+   unimods <- create_mod_data(
+      mod_file = mod_file,
+      mod_path = mod_path,
+      use_unimod = use_unimod)
+
+   x <- fData(m)
+   x <- x %>%
+      mutate(mods = map(Proteoform, extract_mods))
+
+   mass_annotation_table <- get_mass_annotation_table(x,
+                                                      unimods,
+                                                      centroid_tol = centroid_tol,
+                                                      matching_tol = matching_tol)
+   x <- x %>%
+      mutate(mods = map(mods,
+                        annotate_masses,
+                        mass_annotation_table,
+                        matching_tol_self = .Machine$double.eps))
+
+   x <- annotate_Nterm_acetyls(as.data.frame(x),
+                               nterm_tol = nterm_tol,
+                               acetyl_id = acetyl_id)
+
+   rownames(x) <- x$proteoform_id
+   fData(m) <- x
+   return(m)
+}
+
+
+
+
+
+
+
+
+#' @export
 get_mass_annotation_table <- function (x,
                                        unimods,
                                        centroid_tol = 0.3,
