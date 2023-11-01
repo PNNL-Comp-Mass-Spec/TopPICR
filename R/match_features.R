@@ -54,7 +54,7 @@
 #'
 match_features <- function (ms2, ms1, errors, n_mme_sd, n_rt_sd,
                             summary_fn = "max",
-                            num_cores = NULL) {
+                            cores = NULL) {
 
   # Convert n_mme_sd to ppm. This is necessary so the remainder of the
   # function does not have to be altered to reflect the change from using a ppm

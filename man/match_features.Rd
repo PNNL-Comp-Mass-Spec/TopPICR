@@ -11,7 +11,7 @@ match_features(
   n_mme_sd,
   n_rt_sd,
   summary_fn = "max",
-  num_cores = NULL
+  cores = NULL
 )
 }
 \arguments{
