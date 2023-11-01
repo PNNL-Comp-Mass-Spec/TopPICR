@@ -38,6 +38,10 @@
 #'   \code{na.rm} argument. Some examples of functions that are allowed are
 #'   \code{max}, \code{sum}, or \code{median}.
 #'
+#' @param cores \code{integer} Number of cores for parallelization.
+#'   Default is NULL. If NULL then the maximum number of cores is used,
+#'   but no more than R's limit of 125.
+#'
 #' @return A \code{data.table} containing all unidentified features that fall
 #'   within the threshold of an identified feature gene/cluster combination.
 #'
@@ -49,7 +53,8 @@
 #' @export
 #'
 match_features <- function (ms2, ms1, errors, n_mme_sd, n_rt_sd,
-                            summary_fn = "max") {
+                            summary_fn = "max",
+                            num_cores = NULL) {
 
   # Convert n_mme_sd to ppm. This is necessary so the remainder of the
   # function does not have to be altered to reflect the change from using a ppm
@@ -92,8 +97,10 @@ match_features <- function (ms2, ms1, errors, n_mme_sd, n_rt_sd,
                                  y = centroids_rt)
 
   # Prepare to run in parallel.
-  cores <- parallel::detectCores() - 1
-  cores <- min(125, cores) # can't exceed 125 in R
+  if(is.null(cores)){
+    cores <- parallel::detectCores() - 1
+    cores <- min(125, cores) # can't exceed 125 in R
+  }
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl)
 

@@ -4,7 +4,15 @@
 \alias{match_features}
 \title{Extract feature intensity values from unidentified feature data}
 \usage{
-match_features(ms2, ms1, errors, n_mme_sd, n_rt_sd, summary_fn = "max")
+match_features(
+  ms2,
+  ms1,
+  errors,
+  n_mme_sd,
+  n_rt_sd,
+  summary_fn = "max",
+  num_cores = NULL
+)
 }
 \arguments{
 \item{ms2}{A \code{data.table} containing the identified feature data.}
@@ -39,6 +47,10 @@ retention time of all points in the cluster is used for the comparison.}
 summarizing the feature intensity. The function must contain the
 \code{na.rm} argument. Some examples of functions that are allowed are
 \code{max}, \code{sum}, or \code{median}.}
+
+\item{cores}{\code{integer} Number of cores for parallelization.
+Default is NULL. If NULL then the maximum number of cores is used,
+but no more than R's limit of 125.}
 }
 \value{
 A \code{data.table} containing all unidentified features that fall

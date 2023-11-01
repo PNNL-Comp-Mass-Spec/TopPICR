@@ -141,7 +141,7 @@ augment_annotation <- function (x,
 # @author Michael Nestor
 map_peptides_to_fasta <- function (peptides,
                                    fst,
-                                   numCores = parallel::detectCores() - 1) {
+                                   cores = NULL) {
 
   fasta.df <- data.frame(accession = names(fst),
                          sequence = fst,
@@ -149,7 +149,11 @@ map_peptides_to_fasta <- function (peptides,
                          row.names = NULL,
                          check.names = FALSE)
 
-  cl <- parallel::makeCluster(min(125, numCores))
+  if(is.null(cores)){
+    cores <- parallel::detectCores() - 1
+    cores <- min(125, cores)
+  }
+  cl <- parallel::makeCluster(cores)
 
   # Add the pipe and the find_matching_accessions function so they can be used
   # in parallel.
@@ -203,7 +207,7 @@ find_matching_accessions <- function (peptides, fasta.df) {
 #' @author Evan A Martin
 #'
 
-add_acc_info <- function (data, fst) {
+add_acc_info <- function (data, fst, cores = NULL) {
 
   # Only keep the unique combinations of UniProtAcc and cleanSeq to speed up the
   # for loop (only compute values once).
@@ -211,7 +215,10 @@ add_acc_info <- function (data, fst) {
     dplyr::distinct(UniProtAcc, cleanSeq)
 
   # Prepare to run in parallel.
-  cores <- parallel::detectCores() - 1
+  if(is.null(cores)){
+    cores <- parallel::detectCores() - 1
+    cores <- min(125, cores)
+  }
   cl <- parallel::makeCluster(cores)
   doParallel::registerDoParallel(cl)
 
