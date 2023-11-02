@@ -531,7 +531,7 @@ plot_accession_ptm <- function (x,
       limits = if (max(prot$ymax) < 0.5) c(0, 0.5) else NULL
     ) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5),
+      axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1),
       plot.title = ggplot2::element_text(hjust = 0.5, size = 16)
     ) +
     ggplot2::ggtitle(prot_name)
