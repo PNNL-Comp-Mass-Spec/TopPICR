@@ -552,6 +552,69 @@ plot_accession_ptm <- function (x,
 
 }
 
+
+
+
+#' @export
+#'
+#' @importFrom ggplot2 scale_fill_manual
+#'
+plot_pform_sig <- function(x, accession, fill_by, ...){
+
+  cuts <- c(0,0.0001, 0.001, 0.01, 0.05, 1)
+  x[[fill_by]] <- cut(x[[fill_by]], cuts, ordered_result=T)
+
+  fillings <- scale_fill_manual(
+    breaks = levels(x[[fill_by]]),
+    values = c("#E53935", "#FDD835", "#43A047", "#1E88E5", "#BDBDBD"),
+    limits = levels(x[[fill_by]]),
+    labels = c("< 1e-04", "(1e-04, 1e-03]", "(1e-03, 0.01]",
+               "(0.01, 0.05]", "> 0.05"),
+  )
+
+  p <- plot_accession_ptm(x, accession, fill_by, ...)
+  p <- p + fillings
+  return(p)
+}
+
+
+
+# library(scales)
+#' @export
+#'
+#' @importFrom scales trans_new pretty_breaks log_breaks
+#' @importFrom ggplot2 scale_fill_gradientn
+#'
+plot_pform_sig_soft <- function(x, accession, fill_by, ...){
+
+  p <- plot_accession_ptm(x, accession, fill_by, ...)
+
+  log10_rev_trans <- trans_new("log10_rev",
+                               transform = function(x) -log10(x),
+                               inverse = function(x) 10 ^ (-x),
+                               breaks = function(x) rev(log_breaks(10)(x)))
+
+  breaks <- min(p$data[[fill_by]], na.rm = TRUE) %>%
+    {signif(10 ^ (pretty_breaks()(0 : floor(log10(.) * 2)) / 2), 1)}
+
+  labels <- ifelse(breaks > 1e-3,
+                   format(breaks, scientific = FALSE, drop0trailing = TRUE),
+                   format(breaks))
+
+  p <- p + scale_fill_gradientn(trans=log10_rev_trans, colours=MSnSet.utils::jet2.colors(21), # hack!
+                                breaks=breaks, labels=breaks, limits=c(1, min(breaks)))
+  return(p)
+}
+
+
+
+
+
+
+
+
+
+
 # @author Vlad Petyuk
 get_mods_counts <- function(x, acc){
   y <- dplyr::filter(x, UniProtAcc == acc) %>%
