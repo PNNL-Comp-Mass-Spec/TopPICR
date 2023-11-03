@@ -601,8 +601,15 @@ plot_pform_sig_soft <- function(x, accession, fill_by, ...){
                     format(breaks, scientific = FALSE, drop0trailing = TRUE),
                     format(breaks))
 
-   p <- p + scale_fill_gradientn(trans=log10_rev_trans, colours=MSnSet.utils::jet2.colors(21), # hack!
-                                 breaks=breaks, labels=breaks, limits=c(1, min(breaks)))
+   suppressMessages(
+      p <- p +
+         scale_fill_gradientn(trans=log10_rev_trans,
+                              colours=MSnSet.utils::jet2.colors(21), # hack!
+                              breaks=breaks,
+                              labels=breaks,
+                              limits=c(1, min(breaks)))
+   )
+
    return(p)
 }
 
