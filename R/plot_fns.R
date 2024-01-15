@@ -319,6 +319,8 @@ plot_accession_ptm <- function (x,
 
    }
 
+   is_discrete <- class(x[[fill_by]]) %in% c("factor", "character")
+
    # Combine the Gene and pcGroup into one variable. This is used later when
    # producing the plot with the PTMs.
    x <- x %>%
@@ -400,33 +402,41 @@ plot_accession_ptm <- function (x,
                          color = border_color,
                          size = border_size)
 
-   # Use turbo colors.
-   if (turbo) {
+   if(!is_discrete){
+      # Use turbo colors.
+      if (turbo) {
 
-      n_colors <- dplyr::n_distinct(prot[, fill_by])
+         n_colors <- dplyr::n_distinct(prot[, fill_by])
 
-      # use gradient if there is only one color.
-      if (n_colors == 1) {
+         # use gradient if there is only one color.
+         if (n_colors == 1) {
+
+            p <- p +
+               ggplot2::scale_fill_gradient(low = turbo(2)[[1]],
+                                            high = turbo(2)[[2]])
+
+            # Use gradientn when there is more than one color.
+         } else if (n_colors > 1){
+
+            p <- p +
+               ggplot2::scale_fill_gradientn(colors = turbo(n_colors))
+
+         }
+
+         # Use viridis colors if turbo is FALSE.
+      } else if (!turbo && !is.null(viridis)) {
 
          p <- p +
-            ggplot2::scale_fill_gradient(low = turbo(2)[[1]],
-                                         high = turbo(2)[[2]])
-
-         # Use gradientn when there is more than one color.
-      } else if (n_colors > 1){
-
-         p <- p +
-            ggplot2::scale_fill_gradientn(colors = turbo(n_colors))
+            ggplot2::scale_fill_viridis_c(option = viridis)
 
       }
-
-      # Use viridis colors if turbo is FALSE.
-   } else if (!turbo && !is.null(viridis)) {
-
-      p <- p +
-         ggplot2::scale_fill_viridis_c(option = viridis)
-
    }
+
+   # options for discrete
+   if(is_discrete){
+      p <- p + ggplot2::scale_fill_discrete() # just a placeholder basically
+   }
+
 
    prot_mods <- list()
    for(i in 1:nrow(prot)){
