@@ -917,3 +917,47 @@ turbo <- function (n, start = 0, end = 1) {
    xs <- seq.int(from = start, to = end, length.out = n)
    grDevices::rgb(interpolate(turbo_colormap_data, xs))
 }
+
+
+
+NULL
+
+
+
+#' Plotting proteoforms after WGCNA clustering
+#'
+#' Colors the proteoforms according to colors assigned by WGCNA clustering.
+#' Derivative of the `plot_accession_ptm()` function.
+#'
+#' @param x A \code{data.table} a typical use assumed `fData()` of an `MSnSet`.
+#'
+#' @param accession A character string specifying which UniProt accession will
+#'   be plotted.
+#'
+#' @param fill_by column name storing the assigned WGCNA clusters. According to
+#'    WGCNA convention those should be colors. Default values is "cluster".
+#'
+#' @param border_color since sometimes WGCNA assigns colors close to white,
+#'    the default color for the border is "black".
+#'
+#' @param ... further arguments passed to `plot_accession_ptm()`
+#'
+#' @return A `ggplot2` object
+#'
+#' @export
+#'
+#' @author Vlad Petyuk
+#'
+#'
+plot_accession_wgcna <- function(x, accession, fill_by = "cluster", border_color = "black", ...){
+
+   x_sel = dplyr::filter(x, UniProtAcc == accession)
+   color_vals <- unique(x_sel[[fill_by]])
+   stopifnot(all(color_vals %in% colors()))
+   names(color_vals) <- color_vals
+
+   p <- plot_accession_ptm(x, accession, fill_by = fill_by, border_color = border_color, ...)
+   p <- p + scale_fill_manual(values = color_vals)
+   return(p)
+
+}
