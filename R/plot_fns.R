@@ -319,7 +319,7 @@ plot_accession_ptm <- function (x,
 
    }
 
-   is_discrete <- class(x[[fill_by]]) %in% c("factor", "character", "logical")
+   is_discrete <- any(class(x[[fill_by]]) %in% c("factor", "ordered", "character", "logical"))
 
    # Combine the Gene and pcGroup into one variable. This is used later when
    # producing the plot with the PTMs.
