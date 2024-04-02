@@ -19,6 +19,8 @@ read_TopPIC_DMS <- function(data_package_num){
   jobRecords <- get_job_records_by_dataset_package(data_package_num)
   toppic_output <- get_results_for_multiple_jobs.dt(jobRecords, expected_multiple_files = TRUE)
 
+  toppic_version <- determine_toppic_version(toppic_output)
+
   ids <- bind_rows(toppic_output$`_TopPIC_PrSMs.txt`)
 
   ids <- ids %>%
@@ -123,9 +125,18 @@ read_TopPIC_DMS <- function(data_package_num){
   #    tidyr::fill(`Proteoform-level Q-value`, .direction = "down") %>%
   #    tidyr::fill(`cleanSeq`, .direction = "down")
 
+
+  # Taking care of feature data
+  feat <- bind_rows(toppic_output$`_ms1.feature`)
   # Only keep the MS1 variables we use throughout TopPICR.
-  feat <- bind_rows(toppic_output$`_ms1.feature`) %>%
+  if(toppic_version == "1.7.0"){
+    feat <- feat %>%
+      dplyr::rename(Mass = Monoisotopic_mass,
+                    Time_apex = Apex_time)
+  }
+  feat <- feat %>%
     dplyr::select(Dataset, Mass, Intensity, Time_apex)
+
 
   return(list(ms2identifications = ids, ms1features = feat))
 }
