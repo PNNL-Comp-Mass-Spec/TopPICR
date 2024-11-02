@@ -83,7 +83,7 @@ create_mdata <- function (x, errors, n_mme_sd, n_rt_sd) {
     dplyr::ungroup() %>%
     dplyr::select(Gene, pcGroup, collision, UniProtAcc, mass, rt,
                   firstAA, lastAA, protLength, Proteoform, AnnType,
-                  `#unexpected modifications`, spectralCount)
+                  `#unexpected modifications`)
 
   # Return the metadata data frame.
   return (
