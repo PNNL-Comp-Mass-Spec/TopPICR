@@ -6,6 +6,8 @@
 #'    results. Note, it may not work correctly if multipe TopPIC searches
 #'    were done with different parameter or FASTA files.
 #'
+#' @importFrom dplyr bind_rows
+#'
 #' @return A list with MS/MS identification and MS features.
 #'
 #' @md
@@ -129,7 +131,7 @@ read_TopPIC_DMS <- function(data_package_num){
   # Taking care of feature data
   feat <- bind_rows(toppic_output$`_ms1.feature`)
   # Only keep the MS1 variables we use throughout TopPICR.
-  if(toppic_version == "1.7.0"){
+  if(toppic_version == "1.7.0" || "Monoisotopic_mass" %in% colnames(feat)){
     feat <- feat %>%
       dplyr::rename(Mass = Monoisotopic_mass,
                     Time_apex = Apex_time)
