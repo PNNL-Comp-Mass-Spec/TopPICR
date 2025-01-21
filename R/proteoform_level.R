@@ -10,7 +10,7 @@
 #'
 #' @references Smith, L.M., Thomas, P.M., Shortreed, M.R. et al. A five-level
 #'   classification system for proteoform identifications. Nat Methods 16,
-#'   939–940 (2019). https://doi.org/10.1038/s41592-019-0573-x
+#'   939-940 (2019). https://doi.org/10.1038/s41592-019-0573-x
 #'
 #' @author James Fulcher
 #'

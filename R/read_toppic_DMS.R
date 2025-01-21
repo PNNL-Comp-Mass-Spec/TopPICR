@@ -69,7 +69,7 @@ read_TopPIC_DMS <- function(data_package_num){
   # Extract just the UniProt accession. This is the second element (when
   # splitting by |) of the `Protein accession` variable output by TopPIC.
   ids <- ids %>%
-    mutate(UniProtAcc = sub("[^|]*\\|([^|]*)\\|[^|]*","\\1", UniProtAcc))
+    dplyr::mutate(UniProtAcc = sub("[^|]*\\|([^|]*)\\|[^|]*","\\1", UniProtAcc))
 
 
   # Only keep variables we need throughout TopPICR.
