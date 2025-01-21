@@ -1,6 +1,6 @@
 Package: TopPICR
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.6
+Version: 0.0.7
 Authors@R: 
     c(person(given = "Evan",
              family = "Martin",
